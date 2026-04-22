@@ -91,12 +91,13 @@ function minimax(
   }
 }
 
-export function getBestMove(game: Chess, depth = 3): string | null {
+export function getBestMove(game: Chess, depth = 3, elo = 1200): string | null {
   const moves = game.moves();
   if (moves.length === 0) return null;
 
-  // Depth 1 with low ELO: 40% chance of random move (for Arthur-level chaos)
-  if (depth <= 1 && Math.random() < 0.4) {
+  // ELO-based blunder chance: lower ELO = more random moves
+  const blunderChance = elo <= 200 ? 0.75 : elo <= 400 ? 0.5 : elo <= 800 ? 0.2 : 0;
+  if (Math.random() < blunderChance) {
     return moves[Math.floor(Math.random() * moves.length)];
   }
 
