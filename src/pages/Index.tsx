@@ -8,6 +8,25 @@ import { getBestMove } from "@/lib/chessAI";
 import { AIOpponent } from "@/data/aiOpponents";
 import { type GameMode } from "@/components/MainMenu";
 
+function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture: boolean): string | null {
+  if (!opponent) return null;
+  const r = opponent.remarks;
+  
+  // Evaluate material to determine winning/losing
+  const board = game.board();
+  let material = 0;
+  const vals: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+  for (const row of board) for (const sq of row) {
+    if (sq) material += (sq.color === 'b' ? 1 : -1) * (vals[sq.type] || 0);
+  }
+
+  if (game.isCheck()) return r.onCheck[Math.floor(Math.random() * r.onCheck.length)];
+  if (lastMoveWasCapture) return r.onCapture[Math.floor(Math.random() * r.onCapture.length)];
+  if (material < -3) return r.onLosing[Math.floor(Math.random() * r.onLosing.length)];
+  if (material > 3) return r.onWinning[Math.floor(Math.random() * r.onWinning.length)];
+  return r.onMove[Math.floor(Math.random() * r.onMove.length)];
+}
+
 const Index = () => {
   const [mode, setMode] = useState<GameMode>("menu");
   const [game, setGame] = useState(new Chess());
@@ -16,6 +35,7 @@ const Index = () => {
   const [aiOpponent, setAiOpponent] = useState<AIOpponent | null>(null);
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
+  const [aiRemark, setAiRemark] = useState<string | null>(null);
 
   const aiEnabled = mode === "ai";
 
@@ -23,6 +43,7 @@ const Index = () => {
     setGame(new Chess());
     setMoveHistory([]);
     setResigned(null);
+    setAiRemark(null);
   };
 
   const handleMove = useCallback(
@@ -53,12 +74,14 @@ const Index = () => {
 
     setAiThinking(true);
     const timeout = setTimeout(() => {
-      const move = getBestMove(game, aiOpponent.depth);
+      const move = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
       if (move) {
         const result = game.move(move);
         if (result) {
           setMoveHistory((prev) => [...prev, result.san]);
           setTick((t) => t + 1);
+          const wasCapture = !!result.captured;
+          setAiRemark(pickRemark(aiOpponent, game, wasCapture));
         }
       }
       setAiThinking(false);
@@ -78,6 +101,7 @@ const Index = () => {
       game.undo();
       setMoveHistory((prev) => prev.slice(0, -1));
     }
+    setAiRemark(null);
     setTick((t) => t + 1);
   };
 
@@ -136,6 +160,18 @@ const Index = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">♚ Local Match</h1>
         )}
       </div>
+
+      {/* AI speech bubble */}
+      {aiEnabled && aiRemark && aiOpponent && (
+        <div className="flex items-start gap-2 max-w-sm animate-in fade-in slide-in-from-top-2 duration-300">
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-accent shrink-0">
+            <img src={aiOpponent.image} alt="" className="w-full h-full object-cover" />
+          </div>
+          <div className="bg-card border border-border rounded-xl rounded-tl-none px-3 py-2 shadow-lg">
+            <p className="text-sm text-foreground italic">{aiRemark}</p>
+          </div>
+        </div>
+      )}
 
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="relative">
