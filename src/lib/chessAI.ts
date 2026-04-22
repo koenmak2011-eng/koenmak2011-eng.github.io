@@ -1,0 +1,114 @@
+import { Chess } from "chess.js";
+
+const PIECE_VALUES: Record<string, number> = {
+  p: 100, n: 320, b: 330, r: 500, q: 900, k: 20000,
+};
+
+// Piece-square tables for positional evaluation (from white's perspective)
+const PAWN_TABLE = [
+  0,  0,  0,  0,  0,  0,  0,  0,
+  50, 50, 50, 50, 50, 50, 50, 50,
+  10, 10, 20, 30, 30, 20, 10, 10,
+  5,  5, 10, 25, 25, 10,  5,  5,
+  0,  0,  0, 20, 20,  0,  0,  0,
+  5, -5,-10,  0,  0,-10, -5,  5,
+  5, 10, 10,-20,-20, 10, 10,  5,
+  0,  0,  0,  0,  0,  0,  0,  0,
+];
+
+const KNIGHT_TABLE = [
+  -50,-40,-30,-30,-30,-30,-40,-50,
+  -40,-20,  0,  0,  0,  0,-20,-40,
+  -30,  0, 10, 15, 15, 10,  0,-30,
+  -30,  5, 15, 20, 20, 15,  5,-30,
+  -30,  0, 15, 20, 20, 15,  0,-30,
+  -30,  5, 10, 15, 15, 10,  5,-30,
+  -40,-20,  0,  5,  5,  0,-20,-40,
+  -50,-40,-30,-30,-30,-30,-40,-50,
+];
+
+const PST: Record<string, number[]> = {
+  p: PAWN_TABLE,
+  n: KNIGHT_TABLE,
+};
+
+function evaluate(game: Chess): number {
+  const board = game.board();
+  let score = 0;
+  for (let r = 0; r < 8; r++) {
+    for (let c = 0; c < 8; c++) {
+      const piece = board[r][c];
+      if (!piece) continue;
+      const val = PIECE_VALUES[piece.type] || 0;
+      const pst = PST[piece.type];
+      const positional = pst
+        ? piece.color === "w"
+          ? pst[r * 8 + c]
+          : pst[(7 - r) * 8 + c]
+        : 0;
+      score += (piece.color === "w" ? 1 : -1) * (val + positional);
+    }
+  }
+  return score;
+}
+
+function minimax(
+  game: Chess,
+  depth: number,
+  alpha: number,
+  beta: number,
+  maximizing: boolean
+): number {
+  if (depth === 0 || game.isGameOver()) {
+    if (game.isCheckmate()) return maximizing ? -99999 : 99999;
+    if (game.isDraw()) return 0;
+    return evaluate(game);
+  }
+
+  const moves = game.moves();
+  if (maximizing) {
+    let maxEval = -Infinity;
+    for (const move of moves) {
+      game.move(move);
+      const val = minimax(game, depth - 1, alpha, beta, false);
+      game.undo();
+      maxEval = Math.max(maxEval, val);
+      alpha = Math.max(alpha, val);
+      if (beta <= alpha) break;
+    }
+    return maxEval;
+  } else {
+    let minEval = Infinity;
+    for (const move of moves) {
+      game.move(move);
+      const val = minimax(game, depth - 1, alpha, beta, true);
+      game.undo();
+      minEval = Math.min(minEval, val);
+      beta = Math.min(beta, val);
+      if (beta <= alpha) break;
+    }
+    return minEval;
+  }
+}
+
+export function getBestMove(game: Chess, depth = 3): string | null {
+  const moves = game.moves();
+  if (moves.length === 0) return null;
+
+  const isWhite = game.turn() === "w";
+  let bestMove = moves[0];
+  let bestVal = isWhite ? -Infinity : Infinity;
+
+  for (const move of moves) {
+    game.move(move);
+    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite);
+    game.undo();
+
+    if (isWhite ? val > bestVal : val < bestVal) {
+      bestVal = val;
+      bestMove = move;
+    }
+  }
+
+  return bestMove;
+}
