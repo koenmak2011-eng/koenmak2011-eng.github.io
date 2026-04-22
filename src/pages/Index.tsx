@@ -2,20 +2,33 @@ import { useState, useCallback, useEffect } from "react";
 import { Chess, Square } from "chess.js";
 import ChessBoard from "@/components/ChessBoard";
 import GameInfo from "@/components/GameInfo";
+import MainMenu from "@/components/MainMenu";
+import AIPicker from "@/components/AIPicker";
 import { getBestMove } from "@/lib/chessAI";
+import { AIOpponent } from "@/data/aiOpponents";
+import { type GameMode } from "@/components/MainMenu";
 
 const Index = () => {
+  const [mode, setMode] = useState<GameMode>("menu");
   const [game, setGame] = useState(new Chess());
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
   const [, setTick] = useState(0);
-  const [aiEnabled, setAiEnabled] = useState(true);
+  const [aiOpponent, setAiOpponent] = useState<AIOpponent | null>(null);
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
+
+  const aiEnabled = mode === "ai";
+
+  const resetGame = () => {
+    setGame(new Chess());
+    setMoveHistory([]);
+    setResigned(null);
+  };
 
   const handleMove = useCallback(
     (from: Square, to: Square) => {
       if (aiThinking) return false;
-      if (aiEnabled && game.turn() === "b") return false; // block manual moves for AI side
+      if (aiEnabled && game.turn() === "b") return false;
       try {
         const piece = game.get(from);
         const isPromotion =
@@ -35,13 +48,12 @@ const Index = () => {
     [game, aiThinking, aiEnabled]
   );
 
-  // AI makes a move when it's black's turn
   useEffect(() => {
-    if (!aiEnabled || game.turn() !== "b" || game.isGameOver() || resigned) return;
+    if (!aiEnabled || game.turn() !== "b" || game.isGameOver() || resigned || !aiOpponent) return;
 
     setAiThinking(true);
     const timeout = setTimeout(() => {
-      const move = getBestMove(game, 3);
+      const move = getBestMove(game, aiOpponent.depth);
       if (move) {
         const result = game.move(move);
         if (result) {
@@ -50,20 +62,15 @@ const Index = () => {
         }
       }
       setAiThinking(false);
-    }, 300); // small delay for UX
+    }, 400);
 
     return () => clearTimeout(timeout);
-  }, [game, aiEnabled, moveHistory, resigned]);
+  }, [game, aiEnabled, moveHistory, resigned, aiOpponent]);
 
-  const handleReset = () => {
-    setGame(new Chess());
-    setMoveHistory([]);
-    setResigned(null);
-  };
+  const handleReset = () => resetGame();
 
   const handleUndo = () => {
     if (aiEnabled) {
-      // Undo both AI and player move
       game.undo();
       game.undo();
       setMoveHistory((prev) => prev.slice(0, -2));
@@ -74,22 +81,69 @@ const Index = () => {
     setTick((t) => t + 1);
   };
 
-  const handleResign = () => {
-    setResigned(game.turn());
+  const handleResign = () => setResigned(game.turn());
+
+  const handleBackToMenu = () => {
+    setMode("menu");
+    resetGame();
+    setAiOpponent(null);
   };
 
+  // Menu screen
+  if (mode === "menu") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <MainMenu onSelectMode={setMode} />
+      </div>
+    );
+  }
+
+  // AI picker screen
+  if (mode === "ai-pick") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <AIPicker
+          onSelect={(opp) => {
+            setAiOpponent(opp);
+            resetGame();
+            setMode("ai");
+          }}
+          onBack={() => setMode("menu")}
+        />
+      </div>
+    );
+  }
+
+  // Game screen (ai or local)
   return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-6">
-      <h1 className="text-3xl md:text-4xl font-bold text-foreground tracking-tight">
-        ♚ Chess
-      </h1>
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-4">
+      {/* Header with opponent info */}
+      <div className="flex items-center gap-3">
+        {aiEnabled && aiOpponent && (
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-accent shadow">
+              <img src={aiOpponent.image} alt={aiOpponent.name} className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <h1 className="text-xl md:text-2xl font-bold text-foreground leading-tight">
+                vs {aiOpponent.name}
+              </h1>
+              <p className="text-xs text-muted-foreground">ELO {aiOpponent.elo} · {aiOpponent.title}</p>
+            </div>
+          </div>
+        )}
+        {!aiEnabled && (
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">♚ Local Match</h1>
+        )}
+      </div>
+
       <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
         <div className="relative">
           <ChessBoard game={game} onMove={handleMove} />
           {aiThinking && (
             <div className="absolute inset-0 flex items-center justify-center bg-foreground/10 rounded-lg">
               <span className="bg-card px-4 py-2 rounded-lg shadow-lg text-foreground font-semibold animate-pulse">
-                AI is thinking...
+                {aiOpponent?.name} is thinking...
               </span>
             </div>
           )}
@@ -102,10 +156,8 @@ const Index = () => {
           onResign={handleResign}
           resigned={resigned}
           aiEnabled={aiEnabled}
-          onToggleAI={() => {
-            setAiEnabled((v) => !v);
-            handleReset();
-          }}
+          aiOpponent={aiOpponent}
+          onBackToMenu={handleBackToMenu}
           aiThinking={aiThinking}
         />
       </div>
