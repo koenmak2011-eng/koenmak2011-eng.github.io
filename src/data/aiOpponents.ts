@@ -1,3 +1,4 @@
+import arthur from "@/assets/ai-arthur.png";
 import pawnPuppy from "@/assets/ai-pawn-puppy.jpg";
 import capybaraLord from "@/assets/ai-capybara-lord.jpg";
 import bearWarrior from "@/assets/ai-bear-warrior.jpg";
@@ -12,52 +13,68 @@ export interface AIOpponent {
   depth: number;
   image: string;
   description: string;
+  quote: string;
 }
 
 export const AI_OPPONENTS: AIOpponent[] = [
   {
+    id: "arthur",
+    name: "Arthur",
+    title: "The Absolute Unit",
+    elo: 200,
+    depth: 1,
+    image: arthur,
+    description: "Thinks the horsey moves in circles. Once tried to castle with a pawn. Eats pieces off the board when you're not looking.",
+    quote: "\"Wait... which one is the king again?\"",
+  },
+  {
     id: "hamster",
     name: "Sir Nibbles",
-    title: "The Clueless",
+    title: "The Menace",
     elo: 400,
     depth: 1,
     image: pawnPuppy,
-    description: "Barely knows how the pieces move. Snacks between turns.",
+    description: "Has the attention span of a goldfish. Will randomly sacrifice his queen for absolutely no reason. Smells like sunflower seeds.",
+    quote: "\"I meant to do that\" (he did not)",
   },
   {
     id: "capybara",
     name: "Capybara Lord",
-    title: "The Chill",
+    title: "The Unbothered",
     elo: 800,
     depth: 2,
     image: capybaraLord,
-    description: "Relaxed royalty. Wins by vibes and occasional brilliance.",
+    description: "Plays chess while soaking in a hot tub. Accidentally wins games by being so chill opponents rage-quit. Has never experienced stress.",
+    quote: "\"bro it's just a game lol\"",
   },
   {
     id: "bear",
     name: "Bear Warrior",
-    title: "The Crusher",
+    title: "The Unhinged",
     elo: 1200,
     depth: 3,
     image: bearWarrior,
-    description: "Aggressive tactician. Will sacrifice pieces just to intimidate you.",
+    description: "Opens every game by slamming a pawn down so hard the table shakes. Growls at his own pieces when they don't perform. Banned from 3 tournaments.",
+    quote: "\"YOUR QUEEN DIES TONIGHT\"",
   },
   {
     id: "fox",
     name: "Professor Fox",
-    title: "The Cunning",
+    title: "The Insufferable",
     elo: 1600,
     depth: 4,
     image: foxSage,
-    description: "Three moves ahead. Always. Adjusts monocle after every checkmate.",
+    description: "Will explain why your move was bad before you even make it. Has a PhD in being annoying. Tips his top hat after every capture.",
+    quote: "\"Fascinating. A truly amateur blunder.\"",
   },
   {
     id: "dragon",
     name: "Dragon Overlord",
-    title: "The Unforgiving",
+    title: "The Final Boss",
     elo: 2000,
     depth: 5,
     image: dragonOverlord,
-    description: "Ancient grandmaster of flame and strategy. You will suffer.",
+    description: "Has beaten every grandmaster in existence (allegedly). Sets the board on fire when he wins. You WILL cry. Good luck, mortal.",
+    quote: "\"I don't play chess. I end careers.\"",
   },
 ];
