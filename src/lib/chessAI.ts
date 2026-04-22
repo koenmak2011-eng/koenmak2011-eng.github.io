@@ -95,6 +95,11 @@ export function getBestMove(game: Chess, depth = 3): string | null {
   const moves = game.moves();
   if (moves.length === 0) return null;
 
+  // Depth 1 with low ELO: 40% chance of random move (for Arthur-level chaos)
+  if (depth <= 1 && Math.random() < 0.4) {
+    return moves[Math.floor(Math.random() * moves.length)];
+  }
+
   const isWhite = game.turn() === "w";
   let bestMove = moves[0];
   let bestVal = isWhite ? -Infinity : Infinity;
