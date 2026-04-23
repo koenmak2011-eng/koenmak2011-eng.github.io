@@ -4,7 +4,7 @@ import ChessBoard from "@/components/ChessBoard";
 import GameInfo from "@/components/GameInfo";
 import MainMenu from "@/components/MainMenu";
 import AIPicker from "@/components/AIPicker";
-import { getBestMove } from "@/lib/chessAI";
+import { getBestMove, type AIMoveResult } from "@/lib/chessAI";
 import { AIOpponent } from "@/data/aiOpponents";
 import { type GameMode } from "@/components/MainMenu";
 
