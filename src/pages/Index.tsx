@@ -124,6 +124,8 @@ const Index = () => {
       setMoveHistory((prev) => prev.slice(0, -1));
     }
     setAiRemark(null);
+    setAiConfidence(null);
+    setAiWasBlunder(false);
     setTick((t) => t + 1);
   };
 
