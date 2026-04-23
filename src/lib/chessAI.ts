@@ -91,24 +91,33 @@ function minimax(
   }
 }
 
-export function getBestMove(game: Chess, depth = 3, elo = 1200): string | null {
+export interface AIMoveResult {
+  move: string;
+  confidence: number; // 0-100
+  wasBlunder: boolean;
+}
+
+export function getBestMove(game: Chess, depth = 3, elo = 1200): AIMoveResult | null {
   const moves = game.moves();
   if (moves.length === 0) return null;
 
-  // Cap depth at 4 for performance — higher ELO uses smarter eval, not deeper search
   const effectiveDepth = Math.min(depth, 4);
 
-  // ELO-based blunder chance: lower ELO = more random moves
+  // ELO-based blunder chance
   const blunderChance = elo <= 200 ? 0.75 : elo <= 400 ? 0.5 : elo <= 800 ? 0.2 : 0;
   if (Math.random() < blunderChance) {
-    return moves[Math.floor(Math.random() * moves.length)];
+    return {
+      move: moves[Math.floor(Math.random() * moves.length)],
+      confidence: Math.floor(Math.random() * 30 + 5), // 5-35%
+      wasBlunder: true,
+    };
   }
 
   const isWhite = game.turn() === "w";
   let bestMove = moves[0];
   let bestVal = isWhite ? -Infinity : Infinity;
+  let secondBestVal = bestVal;
 
-  // Move ordering: check captures/checks first for better alpha-beta pruning
   const orderedMoves = [...moves].sort((a, b) => {
     const aScore = (a.includes("x") ? 10 : 0) + (a.includes("+") ? 5 : 0);
     const bScore = (b.includes("x") ? 10 : 0) + (b.includes("+") ? 5 : 0);
@@ -121,10 +130,18 @@ export function getBestMove(game: Chess, depth = 3, elo = 1200): string | null {
     game.undo();
 
     if (isWhite ? val > bestVal : val < bestVal) {
+      secondBestVal = bestVal;
       bestVal = val;
       bestMove = move;
+    } else if (isWhite ? val > secondBestVal : val < secondBestVal) {
+      secondBestVal = val;
     }
   }
 
-  return bestMove;
+  // Confidence: how much better the best move is vs second best + absolute position
+  const gap = Math.abs(bestVal - secondBestVal);
+  const positionStrength = Math.min(Math.abs(bestVal) / 500, 1); // normalize
+  const confidence = Math.min(100, Math.floor(40 + gap / 10 + positionStrength * 30 + elo / 100));
+
+  return { move: bestMove, confidence, wasBlunder: false };
 }
