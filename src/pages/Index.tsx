@@ -36,6 +36,9 @@ const Index = () => {
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
   const [aiRemark, setAiRemark] = useState<string | null>(null);
+  const [beatenIds, setBeatenIds] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("chess-beaten") || "[]"); } catch { return []; }
+  });
 
   const aiEnabled = mode === "ai";
 
@@ -127,6 +130,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4">
         <AIPicker
+          beatenIds={beatenIds}
           onSelect={(opp) => {
             setAiOpponent(opp);
             resetGame();
