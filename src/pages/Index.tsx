@@ -42,6 +42,19 @@ const Index = () => {
 
   const aiEnabled = mode === "ai";
 
+  // Track wins against AI
+  useEffect(() => {
+    if (!aiEnabled || !aiOpponent) return;
+    const playerWon =
+      (game.isCheckmate() && game.turn() === "b") ||
+      (resigned === "b");
+    if (playerWon && !beatenIds.includes(aiOpponent.id)) {
+      const updated = [...beatenIds, aiOpponent.id];
+      setBeatenIds(updated);
+      localStorage.setItem("chess-beaten", JSON.stringify(updated));
+    }
+  }, [game, resigned, aiEnabled, aiOpponent, beatenIds]);
+
   const resetGame = () => {
     setGame(new Chess());
     setMoveHistory([]);
