@@ -62,6 +62,8 @@ const Index = () => {
     setMoveHistory([]);
     setResigned(null);
     setAiRemark(null);
+    setAiConfidence(null);
+    setAiWasBlunder(false);
   };
 
   const handleMove = useCallback(
@@ -92,14 +94,16 @@ const Index = () => {
 
     setAiThinking(true);
     const timeout = setTimeout(() => {
-      const move = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
-      if (move) {
-        const result = game.move(move);
+      const aiResult = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
+      if (aiResult) {
+        const result = game.move(aiResult.move);
         if (result) {
           setMoveHistory((prev) => [...prev, result.san]);
           setTick((t) => t + 1);
           const wasCapture = !!result.captured;
           setAiRemark(pickRemark(aiOpponent, game, wasCapture));
+          setAiConfidence(aiResult.confidence);
+          setAiWasBlunder(aiResult.wasBlunder);
         }
       }
       setAiThinking(false);
