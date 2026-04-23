@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
 import { Chess, Square } from "chess.js";
 import ChessPiece from "./ChessPiece";
+import { SFX } from "@/lib/sfx";
 
 interface ChessBoardProps {
   game: Chess;
@@ -26,9 +27,9 @@ const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
         setSelected(null);
         setLegalMoves([]);
         if (!success) {
-          // Try selecting the clicked square instead
           const piece = game.get(square);
           if (piece && piece.color === game.turn()) {
+            SFX.select();
             setSelected(square);
             const moves = game.moves({ square, verbose: true });
             setLegalMoves(moves.map((m) => m.to as Square));
@@ -37,6 +38,7 @@ const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
       } else {
         const piece = game.get(square);
         if (piece && piece.color === game.turn()) {
+          SFX.select();
           setSelected(square);
           const moves = game.moves({ square, verbose: true });
           setLegalMoves(moves.map((m) => m.to as Square));
@@ -62,7 +64,7 @@ const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
                 key={square}
                 onClick={() => handleClick(square)}
                 className={`
-                  w-14 h-14 md:w-[72px] md:h-[72px] flex items-center justify-center relative transition-colors duration-150
+                  w-10 h-10 sm:w-12 sm:h-12 md:w-[72px] md:h-[72px] flex items-center justify-center relative transition-colors duration-150
                   ${isLight ? "bg-board-light" : "bg-board-dark"}
                   ${isSelected ? "ring-4 ring-inset ring-accent z-10" : ""}
                   hover:brightness-110
@@ -73,19 +75,18 @@ const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
                     className={`absolute rounded-full ${
                       piece
                         ? "w-full h-full border-4 border-board-move/60"
-                        : "w-4 h-4 bg-board-move/50"
+                        : "w-3 h-3 sm:w-4 sm:h-4 bg-board-move/50"
                     }`}
                   />
                 )}
                 {piece && <ChessPiece type={piece.type} color={piece.color} />}
-                {/* Coordinates */}
                 {fi === 0 && (
-                  <span className={`absolute top-0.5 left-1 text-[10px] font-bold ${isLight ? "text-board-dark/60" : "text-board-light/60"}`}>
+                  <span className={`absolute top-0 left-0.5 text-[8px] sm:text-[10px] font-bold ${isLight ? "text-board-dark/60" : "text-board-light/60"}`}>
                     {rank}
                   </span>
                 )}
                 {ri === 7 && (
-                  <span className={`absolute bottom-0.5 right-1 text-[10px] font-bold ${isLight ? "text-board-dark/60" : "text-board-light/60"}`}>
+                  <span className={`absolute bottom-0 right-0.5 text-[8px] sm:text-[10px] font-bold ${isLight ? "text-board-dark/60" : "text-board-light/60"}`}>
                     {file}
                   </span>
                 )}
