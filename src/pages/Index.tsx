@@ -187,13 +187,30 @@ const Index = () => {
       </div>
 
       {/* AI speech bubble */}
-      {aiEnabled && aiRemark && aiOpponent && (
+      {aiEnabled && aiOpponent && (aiRemark || aiConfidence !== null) && (
         <div className="flex items-start gap-2 max-w-sm animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-accent shrink-0">
             <img src={aiOpponent.image} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="bg-card border border-border rounded-xl rounded-tl-none px-3 py-2 shadow-lg">
-            <p className="text-sm text-foreground italic">{aiRemark}</p>
+          <div className="bg-card border border-border rounded-xl rounded-tl-none px-3 py-2 shadow-lg space-y-1.5">
+            {aiRemark && <p className="text-sm text-foreground italic">{aiRemark}</p>}
+            {aiConfidence !== null && (
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      aiWasBlunder ? "bg-destructive" : aiConfidence > 70 ? "bg-accent" : aiConfidence > 40 ? "bg-primary" : "bg-muted-foreground"
+                    }`}
+                    style={{ width: `${aiConfidence}%` }}
+                  />
+                </div>
+                <span className={`text-[10px] font-bold ${
+                  aiWasBlunder ? "text-destructive" : "text-muted-foreground"
+                }`}>
+                  {aiWasBlunder ? "YOLO 🎲" : `${aiConfidence}%`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}
