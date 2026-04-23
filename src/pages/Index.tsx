@@ -4,7 +4,7 @@ import ChessBoard from "@/components/ChessBoard";
 import GameInfo from "@/components/GameInfo";
 import MainMenu from "@/components/MainMenu";
 import AIPicker from "@/components/AIPicker";
-import { getBestMove } from "@/lib/chessAI";
+import { getBestMove, type AIMoveResult } from "@/lib/chessAI";
 import { AIOpponent } from "@/data/aiOpponents";
 import { type GameMode } from "@/components/MainMenu";
 
@@ -36,6 +36,8 @@ const Index = () => {
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
   const [aiRemark, setAiRemark] = useState<string | null>(null);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [aiWasBlunder, setAiWasBlunder] = useState(false);
   const [beatenIds, setBeatenIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("chess-beaten") || "[]"); } catch { return []; }
   });
@@ -60,6 +62,8 @@ const Index = () => {
     setMoveHistory([]);
     setResigned(null);
     setAiRemark(null);
+    setAiConfidence(null);
+    setAiWasBlunder(false);
   };
 
   const handleMove = useCallback(
@@ -90,14 +94,16 @@ const Index = () => {
 
     setAiThinking(true);
     const timeout = setTimeout(() => {
-      const move = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
-      if (move) {
-        const result = game.move(move);
+      const aiResult = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
+      if (aiResult) {
+        const result = game.move(aiResult.move);
         if (result) {
           setMoveHistory((prev) => [...prev, result.san]);
           setTick((t) => t + 1);
           const wasCapture = !!result.captured;
           setAiRemark(pickRemark(aiOpponent, game, wasCapture));
+          setAiConfidence(aiResult.confidence);
+          setAiWasBlunder(aiResult.wasBlunder);
         }
       }
       setAiThinking(false);
@@ -118,6 +124,8 @@ const Index = () => {
       setMoveHistory((prev) => prev.slice(0, -1));
     }
     setAiRemark(null);
+    setAiConfidence(null);
+    setAiWasBlunder(false);
     setTick((t) => t + 1);
   };
 
@@ -179,13 +187,30 @@ const Index = () => {
       </div>
 
       {/* AI speech bubble */}
-      {aiEnabled && aiRemark && aiOpponent && (
+      {aiEnabled && aiOpponent && (aiRemark || aiConfidence !== null) && (
         <div className="flex items-start gap-2 max-w-sm animate-in fade-in slide-in-from-top-2 duration-300">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-accent shrink-0">
             <img src={aiOpponent.image} alt="" className="w-full h-full object-cover" />
           </div>
-          <div className="bg-card border border-border rounded-xl rounded-tl-none px-3 py-2 shadow-lg">
-            <p className="text-sm text-foreground italic">{aiRemark}</p>
+          <div className="bg-card border border-border rounded-xl rounded-tl-none px-3 py-2 shadow-lg space-y-1.5">
+            {aiRemark && <p className="text-sm text-foreground italic">{aiRemark}</p>}
+            {aiConfidence !== null && (
+              <div className="flex items-center gap-2">
+                <div className="w-24 h-2 bg-muted rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all duration-500 ${
+                      aiWasBlunder ? "bg-destructive" : aiConfidence > 70 ? "bg-accent" : aiConfidence > 40 ? "bg-primary" : "bg-muted-foreground"
+                    }`}
+                    style={{ width: `${aiConfidence}%` }}
+                  />
+                </div>
+                <span className={`text-[10px] font-bold ${
+                  aiWasBlunder ? "text-destructive" : "text-muted-foreground"
+                }`}>
+                  {aiWasBlunder ? "YOLO 🎲" : `${aiConfidence}%`}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       )}
