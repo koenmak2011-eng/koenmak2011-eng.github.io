@@ -95,6 +95,9 @@ export function getBestMove(game: Chess, depth = 3, elo = 1200): string | null {
   const moves = game.moves();
   if (moves.length === 0) return null;
 
+  // Cap depth at 4 for performance — higher ELO uses smarter eval, not deeper search
+  const effectiveDepth = Math.min(depth, 4);
+
   // ELO-based blunder chance: lower ELO = more random moves
   const blunderChance = elo <= 200 ? 0.75 : elo <= 400 ? 0.5 : elo <= 800 ? 0.2 : 0;
   if (Math.random() < blunderChance) {
@@ -105,9 +108,16 @@ export function getBestMove(game: Chess, depth = 3, elo = 1200): string | null {
   let bestMove = moves[0];
   let bestVal = isWhite ? -Infinity : Infinity;
 
-  for (const move of moves) {
+  // Move ordering: check captures/checks first for better alpha-beta pruning
+  const orderedMoves = [...moves].sort((a, b) => {
+    const aScore = (a.includes("x") ? 10 : 0) + (a.includes("+") ? 5 : 0);
+    const bScore = (b.includes("x") ? 10 : 0) + (b.includes("+") ? 5 : 0);
+    return bScore - aScore;
+  });
+
+  for (const move of orderedMoves) {
     game.move(move);
-    const val = minimax(game, depth - 1, -Infinity, Infinity, !isWhite);
+    const val = minimax(game, effectiveDepth - 1, -Infinity, Infinity, !isWhite);
     game.undo();
 
     if (isWhite ? val > bestVal : val < bestVal) {
