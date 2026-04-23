@@ -36,6 +36,8 @@ const Index = () => {
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
   const [aiRemark, setAiRemark] = useState<string | null>(null);
+  const [aiConfidence, setAiConfidence] = useState<number | null>(null);
+  const [aiWasBlunder, setAiWasBlunder] = useState(false);
   const [beatenIds, setBeatenIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("chess-beaten") || "[]"); } catch { return []; }
   });
