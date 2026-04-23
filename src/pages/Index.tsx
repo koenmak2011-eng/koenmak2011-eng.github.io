@@ -216,6 +216,18 @@ const Index = () => {
         )}
       </div>
 
+      {/* Chaos event banner */}
+      {chaosMessage && (
+        <div className="animate-in fade-in zoom-in-95 duration-500 max-w-md w-full">
+          <div className="bg-destructive/10 border-2 border-destructive rounded-xl p-4 text-center shadow-2xl">
+            <p className="text-2xl font-black text-destructive mb-1">
+              {chaosMessage.emoji} {chaosMessage.name} {chaosMessage.emoji}
+            </p>
+            <p className="text-sm text-foreground font-medium">{chaosMessage.text}</p>
+          </div>
+        </div>
+      )}
+
       {/* AI speech bubble */}
       {aiEnabled && aiOpponent && (aiRemark || aiConfidence !== null) && (
         <div className="flex items-start gap-2 max-w-sm animate-in fade-in slide-in-from-top-2 duration-300">
