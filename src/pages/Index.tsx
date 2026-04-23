@@ -5,6 +5,7 @@ import GameInfo from "@/components/GameInfo";
 import MainMenu from "@/components/MainMenu";
 import AIPicker from "@/components/AIPicker";
 import { getBestMove, type AIMoveResult } from "@/lib/chessAI";
+import { rollChaosEvent } from "@/lib/chaosEvents";
 import { AIOpponent } from "@/data/aiOpponents";
 import { type GameMode } from "@/components/MainMenu";
 
@@ -38,6 +39,7 @@ const Index = () => {
   const [aiRemark, setAiRemark] = useState<string | null>(null);
   const [aiConfidence, setAiConfidence] = useState<number | null>(null);
   const [aiWasBlunder, setAiWasBlunder] = useState(false);
+  const [chaosMessage, setChaosMessage] = useState<{ emoji: string; name: string; text: string } | null>(null);
   const [beatenIds, setBeatenIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("chess-beaten") || "[]"); } catch { return []; }
   });
@@ -64,6 +66,7 @@ const Index = () => {
     setAiRemark(null);
     setAiConfidence(null);
     setAiWasBlunder(false);
+    setChaosMessage(null);
   };
 
   const handleMove = useCallback(
@@ -93,20 +96,47 @@ const Index = () => {
     if (!aiEnabled || game.turn() !== "b" || game.isGameOver() || resigned || !aiOpponent) return;
 
     setAiThinking(true);
+    setChaosMessage(null);
     const timeout = setTimeout(() => {
-      const aiResult = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
-      if (aiResult) {
-        const result = game.move(aiResult.move);
-        if (result) {
-          setMoveHistory((prev) => [...prev, result.san]);
-          setTick((t) => t + 1);
-          const wasCapture = !!result.captured;
-          setAiRemark(pickRemark(aiOpponent, game, wasCapture));
-          setAiConfidence(aiResult.confidence);
-          setAiWasBlunder(aiResult.wasBlunder);
+      // Roll for chaos event BEFORE the normal move
+      const chaos = rollChaosEvent(game, aiOpponent.id);
+      if (chaos) {
+        setChaosMessage({ emoji: chaos.event.emoji, name: chaos.event.name, text: chaos.message });
+        setAiRemark(null);
+        setAiConfidence(null);
+        setTick((t) => t + 1);
+        // After chaos, still try to make a normal move if game isn't over
+        if (!game.isGameOver()) {
+          const chaosTimeout = setTimeout(() => {
+            const aiResult = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
+            if (aiResult) {
+              const result = game.move(aiResult.move);
+              if (result) {
+                setMoveHistory((prev) => [...prev, result.san]);
+                setTick((t) => t + 1);
+              }
+            }
+            setAiThinking(false);
+          }, 1500); // delay after chaos for dramatic effect
+          return () => clearTimeout(chaosTimeout);
+        } else {
+          setAiThinking(false);
         }
+      } else {
+        const aiResult = getBestMove(game, aiOpponent.depth, aiOpponent.elo);
+        if (aiResult) {
+          const result = game.move(aiResult.move);
+          if (result) {
+            setMoveHistory((prev) => [...prev, result.san]);
+            setTick((t) => t + 1);
+            const wasCapture = !!result.captured;
+            setAiRemark(pickRemark(aiOpponent, game, wasCapture));
+            setAiConfidence(aiResult.confidence);
+            setAiWasBlunder(aiResult.wasBlunder);
+          }
+        }
+        setAiThinking(false);
       }
-      setAiThinking(false);
     }, 400);
 
     return () => clearTimeout(timeout);
@@ -185,6 +215,18 @@ const Index = () => {
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">♚ Local Match</h1>
         )}
       </div>
+
+      {/* Chaos event banner */}
+      {chaosMessage && (
+        <div className="animate-in fade-in zoom-in-95 duration-500 max-w-md w-full">
+          <div className="bg-destructive/10 border-2 border-destructive rounded-xl p-4 text-center shadow-2xl">
+            <p className="text-2xl font-black text-destructive mb-1">
+              {chaosMessage.emoji} {chaosMessage.name} {chaosMessage.emoji}
+            </p>
+            <p className="text-sm text-foreground font-medium">{chaosMessage.text}</p>
+          </div>
+        </div>
+      )}
 
       {/* AI speech bubble */}
       {aiEnabled && aiOpponent && (aiRemark || aiConfidence !== null) && (
