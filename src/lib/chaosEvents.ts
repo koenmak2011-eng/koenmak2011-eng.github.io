@@ -30,10 +30,9 @@ export interface ChaosEvent {
   name: string;
   emoji: string;
   description: string;
-  execute: (game: Chess) => string; // returns flavor text
+  execute: (game: Chess) => string;
 }
 
-// Arthur: Board Bite — eats 1-3 random pieces (any side, not kings) permanently
 const arthurBoardBite: ChaosEvent = {
   name: "BOARD BITE",
   emoji: "🍽️",
@@ -41,17 +40,11 @@ const arthurBoardBite: ChaosEvent = {
   execute: (game) => {
     const targets = shuffle(getOccupiedSquares(game, { excludeKing: true }));
     const count = Math.min(targets.length, Math.floor(Math.random() * 3) + 1);
-    const eaten: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const p = game.get(targets[i]);
-      if (p) eaten.push(`${p.color === "w" ? "white" : "black"} ${p.type}`);
-      game.remove(targets[i]);
-    }
+    for (let i = 0; i < count; i++) game.remove(targets[i]);
     return `Arthur ate ${count} piece${count > 1 ? "s" : ""} off the board! OM NOM NOM 🍽️`;
   },
 };
 
-// Austen: Headphone Blast — pushes 1-3 enemy pieces back (toward rank 1 for white pieces)
 const austenHeadphoneBlast: ChaosEvent = {
   name: "HEADPHONE BLAST",
   emoji: "🎧💥",
@@ -83,13 +76,11 @@ const austenHeadphoneBlast: ChaosEvent = {
   },
 };
 
-// Austen: Maths — spawns up to 5 extra pawns for black on empty squares
 const austenMaths: ChaosEvent = {
   name: "MATHS ATTACK",
   emoji: "📐🧮",
   description: "Austen does maths!",
   execute: (game) => {
-    // Find empty squares on ranks 3-6 for pawn placement
     const emptySquares = shuffle(
       ALL_SQUARES.filter((sq) => {
         const rank = parseInt(sq[1]);
@@ -104,7 +95,6 @@ const austenMaths: ChaosEvent = {
   },
 };
 
-// William: Pterodactyl Attack — swoops and removes up to 3 of your pieces
 const williamPterodactylAttack: ChaosEvent = {
   name: "PTERODACTYL ATTACK",
   emoji: "🦅💨",
@@ -112,17 +102,11 @@ const williamPterodactylAttack: ChaosEvent = {
   execute: (game) => {
     const whitePieces = shuffle(getOccupiedSquares(game, { color: "w", excludeKing: true }));
     const count = Math.min(whitePieces.length, Math.floor(Math.random() * 3) + 1);
-    const stolen: string[] = [];
-    for (let i = 0; i < count; i++) {
-      const p = game.get(whitePieces[i]);
-      if (p) stolen.push(p.type);
-      game.remove(whitePieces[i]);
-    }
+    for (let i = 0; i < count; i++) game.remove(whitePieces[i]);
     return `SCREEEECH! William swooped down and nabbed ${count} of your pieces! 🦅💨`;
   },
 };
 
-// Edward: Fighter Jet Bombing — bombs 1-2 random rows, kills all non-king pieces
 const edwardFighterJet: ChaosEvent = {
   name: "FIGHTER JET STRIKE",
   emoji: "✈️💣",
@@ -146,7 +130,6 @@ const edwardFighterJet: ChaosEvent = {
   },
 };
 
-// Arthur Awakened: NUKE — destroys everything except kings and 1 random piece per side
 const awakenedNuke: ChaosEvent = {
   name: "☢️ N U K E ☢️",
   emoji: "☢️",
@@ -154,7 +137,6 @@ const awakenedNuke: ChaosEvent = {
   execute: (game) => {
     const whitePieces = shuffle(getOccupiedSquares(game, { color: "w", excludeKing: true }));
     const blackPieces = shuffle(getOccupiedSquares(game, { color: "b", excludeKing: true }));
-    // Keep 1 random piece per side alive
     const whiteSpared = whitePieces.length > 0 ? whitePieces[0] : null;
     const blackSpared = blackPieces.length > 0 ? blackPieces[0] : null;
     let kills = 0;
@@ -163,20 +145,42 @@ const awakenedNuke: ChaosEvent = {
       game.remove(sq);
       kills++;
     }
-    return `☢️ NUCLEAR LAUNCH DETECTED ☢️ Arthur ★ nuked the board! ${kills} pieces vaporized! Only the strongest survive...`;
+    return `☢️ NUCLEAR LAUNCH DETECTED ☢️ Arthur ★ nuked the board! ${kills} pieces vaporized!`;
   },
 };
 
-// Map opponent ID to their possible chaos events
+const capybaraOilFlood: ChaosEvent = {
+  name: "OIL FLOOD",
+  emoji: "🛢️",
+  description: "The Capybara God floods the board with oil!",
+  execute: (game) => {
+    // Removes ALL player pieces except king and 2 random survivors, spawns 3 black pawns
+    const whitePieces = shuffle(getOccupiedSquares(game, { color: "w", excludeKing: true }));
+    const spared = whitePieces.slice(0, 2);
+    let kills = 0;
+    for (const sq of whitePieces) {
+      if (spared.includes(sq)) continue;
+      game.remove(sq);
+      kills++;
+    }
+    const emptySquares = shuffle(ALL_SQUARES.filter(sq => !game.get(sq) && parseInt(sq[1]) >= 3 && parseInt(sq[1]) <= 6));
+    for (let i = 0; i < Math.min(3, emptySquares.length); i++) {
+      game.put({ type: "p", color: "b" }, emptySquares[i]);
+    }
+    return `🛢️ THE OIL FLOODS EVERYTHING! ${kills} of your pieces drowned! 3 oily pawns emerge! 🛢️`;
+  },
+};
+
 const CHAOS_EVENTS: Record<string, ChaosEvent[]> = {
   arthur: [arthurBoardBite],
   austen: [austenHeadphoneBlast, austenMaths],
   william: [williamPterodactylAttack],
   edward: [edwardFighterJet],
   "arthur-awakened": [awakenedNuke],
+  "capybara-god": [capybaraOilFlood],
 };
 
-const CHAOS_CHANCE = 0.05; // 5%
+const CHAOS_CHANCE = 0.05;
 
 export function rollChaosEvent(
   game: Chess,
