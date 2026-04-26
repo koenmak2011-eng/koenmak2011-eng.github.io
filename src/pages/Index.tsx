@@ -53,33 +53,47 @@ const Index = () => {
   const [beatenIds, setBeatenIds] = useState<string[]>(() => {
     try { return JSON.parse(localStorage.getItem("chess-beaten") || "[]"); } catch { return []; }
   });
+  const [gameAwarded, setGameAwarded] = useState(false);
+  const [gameEnded, setGameEnded] = useState(false);
 
   const aiEnabled = mode === "ai";
 
-  // Track wins
+  // Track wins — award crowns exactly once per game
   useEffect(() => {
-    if (!aiEnabled || !aiOpponent) return;
-    const playerWon = (game.isCheckmate() && game.turn() === "b") || (resigned === "b");
+    if (!aiEnabled || !aiOpponent || gameAwarded) return;
+
+    const checkmate = game.isCheckmate();
+    // In chess.js, turn() returns the side who is TO MOVE — i.e. the side that lost on checkmate
+    const playerWonByMate = checkmate && game.turn() === "b";
+    const aiWonByMate = checkmate && game.turn() === "w";
+    // resigned holds the colour that resigned
+    const playerResigned = resigned === "w";
+    const aiResigned = resigned === "b";
+
+    const playerWon = playerWonByMate || aiResigned;
+    const playerLost = aiWonByMate || playerResigned;
+
     if (playerWon) {
+      setGameAwarded(true);
+      setGameEnded(true);
       if (!beatenIds.includes(aiOpponent.id)) {
         const updated = [...beatenIds, aiOpponent.id];
         setBeatenIds(updated);
         localStorage.setItem("chess-beaten", JSON.stringify(updated));
       }
-      // Award crowns (only once per game end)
-      const crownKey = `chess-crown-awarded-${game.fen()}`;
-      if (!sessionStorage.getItem(crownKey)) {
-        sessionStorage.setItem(crownKey, "1");
-        const newCrowns = crowns + aiOpponent.crownReward;
-        setCrowns(newCrowns);
-        saveCrowns(newCrowns);
-        SFX.crown();
-      }
+      setCrowns(prev => {
+        const next = prev + aiOpponent.crownReward;
+        saveCrowns(next);
+        return next;
+      });
+      SFX.crown();
       SFX.win();
-    } else if (game.isCheckmate() && game.turn() === "w") {
+    } else if (playerLost) {
+      setGameAwarded(true);
+      setGameEnded(true);
       SFX.lose();
     }
-  }, [game, resigned, aiEnabled, aiOpponent, beatenIds, crowns]);
+  }, [game, resigned, aiEnabled, aiOpponent, beatenIds, gameAwarded]);
 
   const resetGame = () => {
     setGame(new Chess());
@@ -92,6 +106,8 @@ const Index = () => {
     setChaosCredits(0);
     setChaosActiveTurns(0);
     setPlayerChaosMsg(null);
+    setGameAwarded(false);
+    setGameEnded(false);
   };
 
   const handleMove = useCallback(
@@ -335,9 +351,9 @@ const Index = () => {
       </div>
 
       {/* Crown reward toast on game over */}
-      {aiEnabled && aiOpponent && (game.isCheckmate() && game.turn() === "b") && (
+      {aiEnabled && aiOpponent && gameAwarded && ((game.isCheckmate() && game.turn() === "b") || resigned === "b") && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-accent/20 border border-accent rounded-xl px-4 py-2 text-center">
-          <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns!</p>
+          <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns! (Total: {crowns})</p>
         </div>
       )}
     </div>
