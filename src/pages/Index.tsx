@@ -106,6 +106,8 @@ const Index = () => {
     setChaosCredits(0);
     setChaosActiveTurns(0);
     setPlayerChaosMsg(null);
+    setGameAwarded(false);
+    setGameEnded(false);
   };
 
   const handleMove = useCallback(
