@@ -351,9 +351,9 @@ const Index = () => {
       </div>
 
       {/* Crown reward toast on game over */}
-      {aiEnabled && aiOpponent && (game.isCheckmate() && game.turn() === "b") && (
+      {aiEnabled && aiOpponent && gameAwarded && ((game.isCheckmate() && game.turn() === "b") || resigned === "b") && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-accent/20 border border-accent rounded-xl px-4 py-2 text-center">
-          <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns!</p>
+          <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns! (Total: {crowns})</p>
         </div>
       )}
     </div>
