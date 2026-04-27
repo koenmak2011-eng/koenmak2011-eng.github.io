@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import bearBg from "@/assets/bear-background.jpg";
 
 export type GameMode = "menu" | "ai-pick" | "ai" | "local" | "online";
@@ -58,6 +59,12 @@ const MainMenu = ({ onSelectMode, crowns }: MainMenuProps) => {
           Online (Coming Soon)
         </Button>
       </div>
+
+      <Link to="/" className="w-full">
+        <Button variant="ghost" className="w-full text-xs sm:text-sm">
+          ← Back to Arcade
+        </Button>
+      </Link>
 
       {/* Bear sign text */}
       <p className="text-[10px] text-muted-foreground/50 italic mt-2">
