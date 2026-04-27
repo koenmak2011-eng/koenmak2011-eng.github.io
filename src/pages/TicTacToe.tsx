@@ -46,6 +46,10 @@ const TicTacToe = () => {
   const [board, setBoard] = useState<Board>(Array(9).fill(null));
   const [turn, setTurn] = useState<"X" | "O">("X");
   const [score, setScore] = useState({ wins: 0, losses: 0, draws: 0 });
+  const [crowns, setCrowns] = useState(loadCrowns);
+  const [awarded, setAwarded] = useState(false);
+  const [lastReward, setLastReward] = useState<number | null>(null);
+  useEffect(() => subscribeCrowns(setCrowns), []);
 
   const { winner, line } = checkWinner(board);
   const isDraw = !winner && board.every(c => c !== null);
