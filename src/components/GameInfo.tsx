@@ -58,7 +58,7 @@ const GameInfo = ({
   }
 
   return (
-    <div className="flex flex-col gap-2 sm:gap-3 w-full max-w-xs">
+    <div className="flex flex-col gap-2 sm:gap-3 w-full max-w-md lg:max-w-xs">
       <div className="bg-card rounded-lg p-3 sm:p-4 shadow-lg border border-border">
         <h2 className="text-base sm:text-lg font-bold text-foreground mb-1">Status</h2>
         <p
