@@ -31,10 +31,7 @@ function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture
   return r.onMove[Math.floor(Math.random() * r.onMove.length)];
 }
 
-function loadCrowns(): number {
-  try { return parseInt(localStorage.getItem("chess-crowns") || "0", 10) || 0; } catch { return 0; }
-}
-function saveCrowns(c: number) { localStorage.setItem("chess-crowns", String(c)); }
+import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
 
 const Index = () => {
   const [mode, setMode] = useState<GameMode>("menu");
