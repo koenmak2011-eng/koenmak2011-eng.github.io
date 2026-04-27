@@ -96,6 +96,9 @@ const Index = () => {
       setGameAwarded(true);
       setGameEnded(true);
       SFX.lose();
+    } else if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()) {
+      setGameAwarded(true);
+      setGameEnded(true);
     }
   }, [game, resigned, aiEnabled, aiOpponent, beatenIds, gameAwarded]);
 
