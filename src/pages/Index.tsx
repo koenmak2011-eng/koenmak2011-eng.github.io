@@ -112,6 +112,8 @@ const Index = () => {
     setPlayerChaosMsg(null);
     setGameAwarded(false);
     setGameEnded(false);
+    setEndDismissed(false);
+    setBoardShake(false);
   };
 
   const handleMove = useCallback(
