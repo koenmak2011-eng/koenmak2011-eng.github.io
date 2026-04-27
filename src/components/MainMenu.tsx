@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Link } from "react-router-dom";
 import bearBg from "@/assets/bear-background.jpg";
 
 export type GameMode = "menu" | "ai-pick" | "ai" | "local" | "online";
