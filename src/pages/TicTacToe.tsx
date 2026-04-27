@@ -115,6 +115,9 @@ const TicTacToe = () => {
         <p className="text-sm text-muted-foreground mt-1">
           You: <span className="font-bold text-accent">X</span> · AI: <span className="font-bold text-primary">O</span>
         </p>
+        <div className="mt-3 inline-flex items-center gap-2 bg-accent/10 border border-accent/30 px-3 py-1 rounded-full">
+          <span className="text-sm font-bold text-accent">👑 {crowns} crowns</span>
+        </div>
       </div>
 
       <div className="flex gap-4 text-xs sm:text-sm">
