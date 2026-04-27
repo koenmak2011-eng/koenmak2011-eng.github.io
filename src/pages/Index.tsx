@@ -10,6 +10,8 @@ import { AIOpponent } from "@/data/aiOpponents";
 import { type GameMode } from "@/components/MainMenu";
 import { PLAYER_CHAOS_OPTIONS, payMaterialCost } from "@/lib/playerChaos";
 import { SFX } from "@/lib/sfx";
+import ChaosOverlay from "@/components/ChaosOverlay";
+import GameEndOverlay from "@/components/GameEndOverlay";
 import bearBg from "@/assets/bear-background.jpg";
 
 function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture: boolean): string | null {
@@ -55,6 +57,8 @@ const Index = () => {
   });
   const [gameAwarded, setGameAwarded] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
+  const [endDismissed, setEndDismissed] = useState(false);
+  const [boardShake, setBoardShake] = useState(false);
 
   const aiEnabled = mode === "ai";
 
@@ -92,6 +96,9 @@ const Index = () => {
       setGameAwarded(true);
       setGameEnded(true);
       SFX.lose();
+    } else if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()) {
+      setGameAwarded(true);
+      setGameEnded(true);
     }
   }, [game, resigned, aiEnabled, aiOpponent, beatenIds, gameAwarded]);
 
@@ -108,6 +115,8 @@ const Index = () => {
     setPlayerChaosMsg(null);
     setGameAwarded(false);
     setGameEnded(false);
+    setEndDismissed(false);
+    setBoardShake(false);
   };
 
   const handleMove = useCallback(
@@ -156,6 +165,8 @@ const Index = () => {
         if (aiOpponent.id === "arthur-awakened" || aiOpponent.id === "capybara-god") SFX.nuke();
         else SFX.chaos();
         setChaosMessage({ emoji: chaos.event.emoji, name: chaos.event.name, text: chaos.message });
+        setBoardShake(true);
+        setTimeout(() => setBoardShake(false), 700);
         setAiRemark(null);
         setAiConfidence(null);
         setTick((t) => t + 1);
@@ -212,6 +223,8 @@ const Index = () => {
     const msg = opt.execute(game);
     SFX.playerChaos();
     setPlayerChaosMsg(msg);
+    setBoardShake(true);
+    setTimeout(() => setBoardShake(false), 700);
     setChaosActiveTurns(t => t + opt.turnsGranted);
     setChaosCredits(c => c + opt.credits);
     setTick(t => t + 1);
@@ -323,7 +336,7 @@ const Index = () => {
       )}
 
       <div className="flex flex-col md:flex-row items-center md:items-start gap-3 sm:gap-6">
-        <div className="relative">
+        <div className={`relative ${boardShake ? "animate-shake" : ""}`}>
           <ChessBoard game={game} onMove={handleMove} />
           {aiThinking && (
             <div className="absolute inset-0 flex items-center justify-center bg-foreground/10 rounded-lg">
@@ -356,6 +369,27 @@ const Index = () => {
           <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns! (Total: {crowns})</p>
         </div>
       )}
+
+      {/* Chaos full-screen overlay */}
+      <ChaosOverlay event={chaosMessage} />
+
+      {/* Game-end overlay */}
+      <GameEndOverlay
+        outcome={
+          endDismissed || !gameEnded
+            ? null
+            : game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()
+            ? "draw"
+            : (game.isCheckmate() && game.turn() === "b") || resigned === "b"
+            ? "win"
+            : (game.isCheckmate() && game.turn() === "w") || resigned === "w"
+            ? "lose"
+            : null
+        }
+        crownReward={aiEnabled && aiOpponent ? aiOpponent.crownReward : undefined}
+        totalCrowns={crowns}
+        onDismiss={() => setEndDismissed(true)}
+      />
     </div>
   );
 };
