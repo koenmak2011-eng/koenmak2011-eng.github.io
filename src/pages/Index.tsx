@@ -46,6 +46,7 @@ const Index = () => {
   const [aiWasBlunder, setAiWasBlunder] = useState(false);
   const [chaosMessage, setChaosMessage] = useState<{ emoji: string; name: string; text: string } | null>(null);
   const [crowns, setCrowns] = useState(loadCrowns);
+  useEffect(() => subscribeCrowns(setCrowns), []);
   const [chaosCredits, setChaosCredits] = useState(0);
   const [chaosActiveTurns, setChaosActiveTurns] = useState(0);
   const [playerChaosMsg, setPlayerChaosMsg] = useState<string | null>(null);
