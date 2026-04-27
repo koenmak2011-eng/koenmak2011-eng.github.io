@@ -335,7 +335,7 @@ const Index = () => {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row items-center md:items-start gap-3 sm:gap-6">
+      <div className="flex flex-col lg:flex-row items-center lg:items-start gap-3 sm:gap-6 w-full max-w-[min(100vw-1rem,1100px)]">
         <div className={`relative ${boardShake ? "animate-shake" : ""}`}>
           <ChessBoard game={game} onMove={handleMove} />
           {aiThinking && (

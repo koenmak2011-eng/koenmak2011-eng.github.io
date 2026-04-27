@@ -64,7 +64,7 @@ const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
                 key={square}
                 onClick={() => handleClick(square)}
                 className={`
-                  w-10 h-10 sm:w-12 sm:h-12 md:w-[72px] md:h-[72px] flex items-center justify-center relative transition-colors duration-150
+                  w-9 h-9 sm:w-11 sm:h-11 md:w-14 md:h-14 lg:w-[72px] lg:h-[72px] flex items-center justify-center relative transition-colors duration-150
                   ${isLight ? "bg-board-light" : "bg-board-dark"}
                   ${isSelected ? "ring-4 ring-inset ring-accent z-10" : ""}
                   hover:brightness-110
