@@ -60,6 +60,12 @@ const MainMenu = ({ onSelectMode, crowns }: MainMenuProps) => {
         </Button>
       </div>
 
+      <Link to="/" className="w-full">
+        <Button variant="ghost" className="w-full text-xs sm:text-sm">
+          ← Back to Arcade
+        </Button>
+      </Link>
+
       {/* Bear sign text */}
       <p className="text-[10px] text-muted-foreground/50 italic mt-2">
         Oliver Ware is NOT a certified bear 🐻
