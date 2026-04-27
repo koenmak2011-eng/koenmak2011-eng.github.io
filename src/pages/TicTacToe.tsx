@@ -143,11 +143,14 @@ const TicTacToe = () => {
         ))}
       </div>
 
-      <div className="text-center min-h-[2rem]">
+      <div className="text-center min-h-[2rem] space-y-1">
         {winner === "X" && <p className="text-2xl font-black text-accent animate-rise-up">🏆 You win!</p>}
         {winner === "O" && <p className="text-2xl font-black text-destructive animate-rise-up">💀 AI wins!</p>}
         {isDraw && <p className="text-2xl font-black text-primary animate-rise-up">🤝 Draw!</p>}
         {!gameOver && turn === "O" && <p className="text-sm text-muted-foreground animate-pulse">AI is thinking...</p>}
+        {lastReward !== null && lastReward > 0 && (
+          <p className="text-sm font-bold text-accent animate-rise-up">+{lastReward} 👑 (Total: {crowns})</p>
+        )}
       </div>
 
       <div className="flex gap-2">
