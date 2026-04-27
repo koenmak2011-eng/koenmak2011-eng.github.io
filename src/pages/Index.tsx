@@ -162,6 +162,8 @@ const Index = () => {
         if (aiOpponent.id === "arthur-awakened" || aiOpponent.id === "capybara-god") SFX.nuke();
         else SFX.chaos();
         setChaosMessage({ emoji: chaos.event.emoji, name: chaos.event.name, text: chaos.message });
+        setBoardShake(true);
+        setTimeout(() => setBoardShake(false), 700);
         setAiRemark(null);
         setAiConfidence(null);
         setTick((t) => t + 1);
