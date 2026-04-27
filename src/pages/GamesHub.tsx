@@ -51,13 +51,11 @@ const GAMES: Game[] = [
   },
 ];
 
-function loadCrowns(): number {
-  try { return parseInt(localStorage.getItem("chess-crowns") || "0", 10) || 0; } catch { return 0; }
-}
+import { loadCrowns, subscribeCrowns } from "@/lib/crowns";
 
 const GamesHub = () => {
-  const [crowns, setCrowns] = useState(0);
-  useEffect(() => { setCrowns(loadCrowns()); }, []);
+  const [crowns, setCrowns] = useState(loadCrowns);
+  useEffect(() => subscribeCrowns(setCrowns), []);
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
