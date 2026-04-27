@@ -67,15 +67,36 @@ const Index = () => {
     if (!aiEnabled || !aiOpponent || gameAwarded) return;
 
     const checkmate = game.isCheckmate();
-    // In chess.js, turn() returns the side who is TO MOVE — i.e. the side that lost on checkmate
     const playerWonByMate = checkmate && game.turn() === "b";
     const aiWonByMate = checkmate && game.turn() === "w";
-    // resigned holds the colour that resigned
     const playerResigned = resigned === "w";
     const aiResigned = resigned === "b";
 
-    const playerWon = playerWonByMate || aiResigned;
-    const playerLost = aiWonByMate || playerResigned;
+    // Count remaining material (excluding kings) — chaos can wipe a side out
+    let whiteMaterial = 0;
+    let blackMaterial = 0;
+    let whiteKing = false;
+    let blackKing = false;
+    const vals: Record<string, number> = { p: 1, n: 3, b: 3, r: 5, q: 9, k: 0 };
+    for (const row of game.board()) {
+      for (const sq of row) {
+        if (!sq) continue;
+        if (sq.type === "k") {
+          if (sq.color === "w") whiteKing = true;
+          else blackKing = true;
+        } else {
+          if (sq.color === "w") whiteMaterial += vals[sq.type];
+          else blackMaterial += vals[sq.type];
+        }
+      }
+    }
+
+    // Chaos win: AI has only king and < 3 material, OR no king at all
+    const aiAnnihilated = !blackKing || (blackMaterial === 0 && whiteMaterial >= 3);
+    const playerAnnihilated = !whiteKing || (whiteMaterial === 0 && blackMaterial >= 3);
+
+    const playerWon = playerWonByMate || aiResigned || aiAnnihilated;
+    const playerLost = aiWonByMate || playerResigned || playerAnnihilated;
 
     if (playerWon) {
       setGameAwarded(true);
