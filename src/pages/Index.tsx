@@ -12,6 +12,7 @@ import { PLAYER_CHAOS_OPTIONS, payMaterialCost } from "@/lib/playerChaos";
 import { SFX } from "@/lib/sfx";
 import ChaosOverlay from "@/components/ChaosOverlay";
 import GameEndOverlay from "@/components/GameEndOverlay";
+import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
 import bearBg from "@/assets/bear-background.jpg";
 
 function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture: boolean): string | null {
@@ -31,10 +32,6 @@ function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture
   return r.onMove[Math.floor(Math.random() * r.onMove.length)];
 }
 
-function loadCrowns(): number {
-  try { return parseInt(localStorage.getItem("chess-crowns") || "0", 10) || 0; } catch { return 0; }
-}
-function saveCrowns(c: number) { localStorage.setItem("chess-crowns", String(c)); }
 
 const Index = () => {
   const [mode, setMode] = useState<GameMode>("menu");
@@ -49,6 +46,7 @@ const Index = () => {
   const [aiWasBlunder, setAiWasBlunder] = useState(false);
   const [chaosMessage, setChaosMessage] = useState<{ emoji: string; name: string; text: string } | null>(null);
   const [crowns, setCrowns] = useState(loadCrowns);
+  useEffect(() => subscribeCrowns(setCrowns), []);
   const [chaosCredits, setChaosCredits] = useState(0);
   const [chaosActiveTurns, setChaosActiveTurns] = useState(0);
   const [playerChaosMsg, setPlayerChaosMsg] = useState<string | null>(null);

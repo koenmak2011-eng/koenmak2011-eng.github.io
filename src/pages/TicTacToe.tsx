@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SFX } from "@/lib/sfx";
+import { addCrowns, loadCrowns, subscribeCrowns } from "@/lib/crowns";
+
+const WIN_REWARD = 1;
+const DRAW_REWARD = 0;
 
 type Cell = "X" | "O" | null;
 type Board = Cell[];
@@ -42,6 +46,10 @@ const TicTacToe = () => {
   const [board, setBoard] = useState<Board>(Array(9).fill(null));
   const [turn, setTurn] = useState<"X" | "O">("X");
   const [score, setScore] = useState({ wins: 0, losses: 0, draws: 0 });
+  const [crowns, setCrowns] = useState(loadCrowns);
+  const [awarded, setAwarded] = useState(false);
+  const [lastReward, setLastReward] = useState<number | null>(null);
+  useEffect(() => subscribeCrowns(setCrowns), []);
 
   const { winner, line } = checkWinner(board);
   const isDraw = !winner && board.every(c => c !== null);
@@ -62,11 +70,25 @@ const TicTacToe = () => {
     }
   }, [turn, board, gameOver]);
 
-  // Score on game end
+  // Score + crowns on game end (once per game)
   useEffect(() => {
-    if (winner === "X") { setScore(s => ({ ...s, wins: s.wins + 1 })); SFX.win(); SFX.crown(); }
-    else if (winner === "O") { setScore(s => ({ ...s, losses: s.losses + 1 })); SFX.lose(); }
-    else if (isDraw) { setScore(s => ({ ...s, draws: s.draws + 1 })); }
+    if (awarded) return;
+    if (winner === "X") {
+      setScore(s => ({ ...s, wins: s.wins + 1 }));
+      addCrowns(WIN_REWARD);
+      setLastReward(WIN_REWARD);
+      setAwarded(true);
+      SFX.win();
+      SFX.crown();
+    } else if (winner === "O") {
+      setScore(s => ({ ...s, losses: s.losses + 1 }));
+      setAwarded(true);
+      SFX.lose();
+    } else if (isDraw) {
+      setScore(s => ({ ...s, draws: s.draws + 1 }));
+      if (DRAW_REWARD > 0) { addCrowns(DRAW_REWARD); setLastReward(DRAW_REWARD); }
+      setAwarded(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [winner, isDraw]);
 
@@ -82,6 +104,8 @@ const TicTacToe = () => {
   const reset = () => {
     setBoard(Array(9).fill(null));
     setTurn("X");
+    setAwarded(false);
+    setLastReward(null);
   };
 
   return (
@@ -91,6 +115,9 @@ const TicTacToe = () => {
         <p className="text-sm text-muted-foreground mt-1">
           You: <span className="font-bold text-accent">X</span> · AI: <span className="font-bold text-primary">O</span>
         </p>
+        <div className="mt-3 inline-flex items-center gap-2 bg-accent/10 border border-accent/30 px-3 py-1 rounded-full">
+          <span className="text-sm font-bold text-accent">👑 {crowns} crowns</span>
+        </div>
       </div>
 
       <div className="flex gap-4 text-xs sm:text-sm">
@@ -116,11 +143,14 @@ const TicTacToe = () => {
         ))}
       </div>
 
-      <div className="text-center min-h-[2rem]">
+      <div className="text-center min-h-[2rem] space-y-1">
         {winner === "X" && <p className="text-2xl font-black text-accent animate-rise-up">🏆 You win!</p>}
         {winner === "O" && <p className="text-2xl font-black text-destructive animate-rise-up">💀 AI wins!</p>}
         {isDraw && <p className="text-2xl font-black text-primary animate-rise-up">🤝 Draw!</p>}
         {!gameOver && turn === "O" && <p className="text-sm text-muted-foreground animate-pulse">AI is thinking...</p>}
+        {lastReward !== null && lastReward > 0 && (
+          <p className="text-sm font-bold text-accent animate-rise-up">+{lastReward} 👑 (Total: {crowns})</p>
+        )}
       </div>
 
       <div className="flex gap-2">
