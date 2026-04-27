@@ -220,6 +220,8 @@ const Index = () => {
     const msg = opt.execute(game);
     SFX.playerChaos();
     setPlayerChaosMsg(msg);
+    setBoardShake(true);
+    setTimeout(() => setBoardShake(false), 700);
     setChaosActiveTurns(t => t + opt.turnsGranted);
     setChaosCredits(c => c + opt.credits);
     setTick(t => t + 1);
