@@ -366,6 +366,27 @@ const Index = () => {
           <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns! (Total: {crowns})</p>
         </div>
       )}
+
+      {/* Chaos full-screen overlay */}
+      <ChaosOverlay event={chaosMessage} />
+
+      {/* Game-end overlay */}
+      <GameEndOverlay
+        outcome={
+          endDismissed || !gameEnded
+            ? null
+            : game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()
+            ? "draw"
+            : (game.isCheckmate() && game.turn() === "b") || resigned === "b"
+            ? "win"
+            : (game.isCheckmate() && game.turn() === "w") || resigned === "w"
+            ? "lose"
+            : null
+        }
+        crownReward={aiEnabled && aiOpponent ? aiOpponent.crownReward : undefined}
+        totalCrowns={crowns}
+        onDismiss={() => setEndDismissed(true)}
+      />
     </div>
   );
 };
