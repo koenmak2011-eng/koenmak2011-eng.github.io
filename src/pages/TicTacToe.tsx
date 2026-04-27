@@ -2,6 +2,10 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SFX } from "@/lib/sfx";
+import { addCrowns, loadCrowns, subscribeCrowns } from "@/lib/crowns";
+
+const WIN_REWARD = 1;
+const DRAW_REWARD = 0;
 
 type Cell = "X" | "O" | null;
 type Board = Cell[];
