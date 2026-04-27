@@ -57,6 +57,8 @@ const Index = () => {
   });
   const [gameAwarded, setGameAwarded] = useState(false);
   const [gameEnded, setGameEnded] = useState(false);
+  const [endDismissed, setEndDismissed] = useState(false);
+  const [boardShake, setBoardShake] = useState(false);
 
   const aiEnabled = mode === "ai";
 
