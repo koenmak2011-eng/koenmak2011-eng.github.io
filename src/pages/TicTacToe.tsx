@@ -70,11 +70,25 @@ const TicTacToe = () => {
     }
   }, [turn, board, gameOver]);
 
-  // Score on game end
+  // Score + crowns on game end (once per game)
   useEffect(() => {
-    if (winner === "X") { setScore(s => ({ ...s, wins: s.wins + 1 })); SFX.win(); SFX.crown(); }
-    else if (winner === "O") { setScore(s => ({ ...s, losses: s.losses + 1 })); SFX.lose(); }
-    else if (isDraw) { setScore(s => ({ ...s, draws: s.draws + 1 })); }
+    if (awarded) return;
+    if (winner === "X") {
+      setScore(s => ({ ...s, wins: s.wins + 1 }));
+      addCrowns(WIN_REWARD);
+      setLastReward(WIN_REWARD);
+      setAwarded(true);
+      SFX.win();
+      SFX.crown();
+    } else if (winner === "O") {
+      setScore(s => ({ ...s, losses: s.losses + 1 }));
+      setAwarded(true);
+      SFX.lose();
+    } else if (isDraw) {
+      setScore(s => ({ ...s, draws: s.draws + 1 }));
+      if (DRAW_REWARD > 0) { addCrowns(DRAW_REWARD); setLastReward(DRAW_REWARD); }
+      setAwarded(true);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [winner, isDraw]);
 
@@ -90,6 +104,8 @@ const TicTacToe = () => {
   const reset = () => {
     setBoard(Array(9).fill(null));
     setTurn("X");
+    setAwarded(false);
+    setLastReward(null);
   };
 
   return (
