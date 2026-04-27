@@ -32,7 +32,6 @@ function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture
   return r.onMove[Math.floor(Math.random() * r.onMove.length)];
 }
 
-import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
 
 const Index = () => {
   const [mode, setMode] = useState<GameMode>("menu");
