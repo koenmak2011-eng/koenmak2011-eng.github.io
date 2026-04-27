@@ -333,7 +333,7 @@ const Index = () => {
       )}
 
       <div className="flex flex-col md:flex-row items-center md:items-start gap-3 sm:gap-6">
-        <div className="relative">
+        <div className={`relative ${boardShake ? "animate-shake" : ""}`}>
           <ChessBoard game={game} onMove={handleMove} />
           {aiThinking && (
             <div className="absolute inset-0 flex items-center justify-center bg-foreground/10 rounded-lg">
