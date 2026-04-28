@@ -52,10 +52,13 @@ const GAMES: Game[] = [
 ];
 
 import { loadCrowns, subscribeCrowns } from "@/lib/crowns";
+import { VIDEOS } from "@/lib/videos";
+import VideoCard from "@/components/VideoCard";
 
 const GamesHub = () => {
   const [crowns, setCrowns] = useState(loadCrowns);
   useEffect(() => subscribeCrowns(setCrowns), []);
+  const featured = VIDEOS[0];
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
@@ -111,6 +114,22 @@ const GamesHub = () => {
             );
           })}
         </div>
+
+        {/* Featured video */}
+        {featured && (
+          <section className="mt-12">
+            <div className="flex items-end justify-between mb-4">
+              <div>
+                <h2 className="text-2xl sm:text-3xl font-black text-foreground">🎬 Featured Video</h2>
+                <p className="text-xs sm:text-sm text-muted-foreground">A clip from the Arcade vault.</p>
+              </div>
+              <Link to="/videos" className="text-xs sm:text-sm font-bold text-accent hover:underline">
+                See all →
+              </Link>
+            </div>
+            <VideoCard video={featured} compact />
+          </section>
+        )}
 
         <footer className="text-center mt-10 text-[10px] text-muted-foreground">
           Oliver Ware is not a certified bear. 🐻
