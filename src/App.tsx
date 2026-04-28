@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import GamesHub from "./pages/GamesHub.tsx";
 import Index from "./pages/Index.tsx";
 import TicTacToe from "./pages/TicTacToe.tsx";
+import Checkers from "./pages/Checkers.tsx";
 import Videos from "./pages/Videos.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
@@ -21,6 +22,7 @@ const App = () => (
           <Route path="/" element={<GamesHub />} />
           <Route path="/chess" element={<Index />} />
           <Route path="/tictactoe" element={<TicTacToe />} />
+          <Route path="/checkers" element={<Checkers />} />
           <Route path="/videos" element={<Videos />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

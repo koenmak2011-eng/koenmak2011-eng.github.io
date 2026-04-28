@@ -35,19 +35,10 @@ const GAMES: Game[] = [
     id: "checkers",
     title: "Checkers",
     emoji: "🔴",
-    tagline: "Coming soon — classic board, chaotic twist.",
+    tagline: "Random-image pieces. Win = 500 👑.",
     path: "/checkers",
-    available: false,
-    accent: "from-muted/40 to-muted/10",
-  },
-  {
-    id: "memory",
-    title: "Memory Match",
-    emoji: "🧠",
-    tagline: "Coming soon — flip & match Capybara cards.",
-    path: "/memory",
-    available: false,
-    accent: "from-muted/40 to-muted/10",
+    available: true,
+    accent: "from-destructive/30 to-accent/10",
   },
 ];
 
