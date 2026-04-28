@@ -12,32 +12,17 @@ export interface VideoItem {
 export const VIDEOS: VideoItem[] = [
   {
     id: "v1",
-    title: "Video Slot 1",
-    description: "Replace public/videos/video1.mp4 with your clip.",
-    src: "/videos/video1.mp4",
-    poster: "/videos/thumb1.jpg",
-  },
-  {
-    id: "v2",
-    title: "Video Slot 2",
-    description: "Replace public/videos/video2.mp4 with your clip.",
-    src: "/videos/video2.mp4",
-    poster: "/videos/thumb2.jpg",
-  },
-  {
-    id: "v3",
-    title: "Video Slot 3",
-    description: "Replace public/videos/video3.mp4 with your clip.",
-    src: "/videos/video3.mp4",
-    poster: "/videos/thumb3.jpg",
+    title: "Arcade Short",
+    description: "Featured YouTube short.",
+    src: "https://youtube.com/shorts/W2Fr1qxq9D4",
   },
 ];
 
 export const isExternal = (src: string) => /^https?:\/\//i.test(src);
 
 export function getEmbedUrl(src: string): string | null {
-  // YouTube
-  const yt = src.match(/(?:youtube\.com\/(?:watch\?v=|embed\/)|youtu\.be\/)([\w-]{11})/);
+  // YouTube (regular, shorts, embed, youtu.be)
+  const yt = src.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([\w-]{11})/);
   if (yt) return `https://www.youtube.com/embed/${yt[1]}`;
   // Vimeo
   const vm = src.match(/vimeo\.com\/(\d+)/);
