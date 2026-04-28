@@ -123,8 +123,37 @@ const GamesHub = () => {
         )}
 
         <footer className="text-center mt-10 text-[10px] text-muted-foreground">
-          Oliver Ware is not a certified bear. 🐻
+          <button
+            onClick={() => setShowSecretVideo(true)}
+            className="hover:text-accent transition-colors cursor-pointer"
+          >
+            Oliver Ware is not a certified bear. 🐻
+          </button>
         </footer>
+      </div>
+
+      {showSecretVideo && (
+        <div
+          className="fixed inset-0 z-50 bg-background/95 backdrop-blur flex items-center justify-center p-4"
+          onClick={() => setShowSecretVideo(false)}
+        >
+          <div className="relative w-full max-w-md aspect-[9/16]" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowSecretVideo(false)}
+              className="absolute -top-10 right-0 text-foreground hover:text-accent text-sm font-bold"
+            >
+              ✕ close
+            </button>
+            <iframe
+              src="https://www.youtube.com/embed/W2Fr1qxq9D4?autoplay=1"
+              className="w-full h-full rounded-2xl border-2 border-accent shadow-2xl"
+              allow="autoplay; encrypted-media"
+              allowFullScreen
+              title="Secret video"
+            />
+          </div>
+        </div>
+      )}
       </div>
     </div>
   );

@@ -54,8 +54,9 @@ const AIPicker = ({ onSelect, onBack, beatenIds, crowns }: AIPickerProps) => {
 
       <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5 w-full">
         {AI_OPPONENTS.map((opp, i) => {
-          const isLockedByBeaten = opp.locked && !allNonSecretBeaten;
+          // If a crown gate is set, that's the ONLY requirement (ignore beat-everyone)
           const isLockedByCrowns = opp.lockedByCrowns ? crowns < opp.lockedByCrowns : false;
+          const isLockedByBeaten = opp.locked && !opp.lockedByCrowns && !allNonSecretBeaten;
           const isLocked = isLockedByBeaten || isLockedByCrowns;
           const isBeaten = beatenIds.includes(opp.id);
 
