@@ -48,6 +48,7 @@ import VideoCard from "@/components/VideoCard";
 
 const GamesHub = () => {
   const [crowns, setCrowns] = useState(loadCrowns);
+  const [showSecretVideo, setShowSecretVideo] = useState(false);
   useEffect(() => subscribeCrowns(setCrowns), []);
   const featured = VIDEOS[0];
 
@@ -154,7 +155,6 @@ const GamesHub = () => {
           </div>
         </div>
       )}
-      </div>
     </div>
   );
 };
