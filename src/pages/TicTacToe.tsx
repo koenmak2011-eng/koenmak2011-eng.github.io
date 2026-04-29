@@ -1,162 +1,254 @@
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { SFX } from "@/lib/sfx";
 import { addCrowns, loadCrowns, subscribeCrowns } from "@/lib/crowns";
+import { TTT_OPPONENTS, type TTTOpponent } from "@/data/tttOpponents";
+import GenericAIPicker from "@/components/GenericAIPicker";
+import AiSongPlayer from "@/components/AiSongPlayer";
+import TopHat from "@/components/TopHat";
+import { addBeaten, loadBeaten, subscribeBeaten } from "@/lib/beaten";
+import { rollTTTChaos, checkTTTWinner, type Mark, type TTTChaosResult } from "@/lib/tttChaos";
 
-const WIN_REWARD = 1;
-const DRAW_REWARD = 0;
+type Mode = "menu" | "ai-pick" | "ai" | "local";
 
-type Cell = "X" | "O" | null;
-type Board = Cell[];
-
-const LINES = [
-  [0, 1, 2], [3, 4, 5], [6, 7, 8],
-  [0, 3, 6], [1, 4, 7], [2, 5, 8],
-  [0, 4, 8], [2, 4, 6],
-];
-
-function checkWinner(b: Board): { winner: Cell; line: number[] | null } {
-  for (const line of LINES) {
-    const [a, c, d] = line;
-    if (b[a] && b[a] === b[c] && b[a] === b[d]) return { winner: b[a], line };
-  }
-  return { winner: null, line: null };
-}
-
-function aiMove(b: Board): number {
-  // Try to win, then block, else center, else random
-  for (const mark of ["O", "X"] as const) {
-    for (const line of LINES) {
-      const cells = line.map(i => b[i]);
-      const empty = line.find(i => !b[i]);
-      if (empty !== undefined && cells.filter(c => c === mark).length === 2 && cells.filter(c => c === null).length === 1) {
-        return empty;
-      }
+// AI move: minimax for skill==1, mixed with random for lower skill
+function aiBestMove(board: Mark[], size: number, mark: Mark): number {
+  const target = size <= 4 ? 3 : 4;
+  // Try win, then block, then center, then random — heuristic baseline
+  const opponent: Mark = mark === "X" ? "O" : "X";
+  // Look for immediate win/block by checking each empty
+  for (const m of [mark, opponent]) {
+    for (let i = 0; i < board.length; i++) {
+      if (board[i]) continue;
+      const test = [...board];
+      test[i] = m;
+      if (checkTTTWinner(test, size).winner === m) return i;
     }
   }
-  if (!b[4]) return 4;
-  const corners = [0, 2, 6, 8].filter(i => !b[i]);
+  const center = Math.floor(size / 2) * size + Math.floor(size / 2);
+  if (!board[center]) return center;
+  // Prefer corners
+  const corners = [0, size - 1, size * (size - 1), size * size - 1].filter((i) => !board[i]);
   if (corners.length) return corners[Math.floor(Math.random() * corners.length)];
-  const empty = b.map((c, i) => c === null ? i : -1).filter(i => i >= 0);
+  const empty = board.map((c, i) => (c === null ? i : -1)).filter((i) => i >= 0);
+  return empty[Math.floor(Math.random() * empty.length)];
+}
+
+function aiMove(board: Mark[], size: number, mark: Mark, skill: number): number {
+  if (Math.random() < skill) return aiBestMove(board, size, mark);
+  // Random fallback
+  const empty = board.map((c, i) => (c === null ? i : -1)).filter((i) => i >= 0);
   return empty[Math.floor(Math.random() * empty.length)];
 }
 
 const TicTacToe = () => {
-  const [board, setBoard] = useState<Board>(Array(9).fill(null));
+  const [mode, setMode] = useState<Mode>("menu");
+  const [size, setSize] = useState(3);
+  const [board, setBoard] = useState<Mark[]>(() => Array(9).fill(null));
   const [turn, setTurn] = useState<"X" | "O">("X");
-  const [score, setScore] = useState({ wins: 0, losses: 0, draws: 0 });
   const [crowns, setCrowns] = useState(loadCrowns);
   const [awarded, setAwarded] = useState(false);
-  const [lastReward, setLastReward] = useState<number | null>(null);
-  useEffect(() => subscribeCrowns(setCrowns), []);
+  const [opponent, setOpponent] = useState<TTTOpponent | null>(null);
+  const [chaosMsg, setChaosMsg] = useState<TTTChaosResult | null>(null);
+  const [beatenIds, setBeatenIds] = useState<string[]>(() => loadBeaten("tictactoe"));
 
-  const { winner, line } = checkWinner(board);
-  const isDraw = !winner && board.every(c => c !== null);
+  useEffect(() => subscribeCrowns(setCrowns), []);
+  useEffect(() => subscribeBeaten(() => setBeatenIds(loadBeaten("tictactoe"))), []);
+
+  const { winner, line } = useMemo(() => checkTTTWinner(board, size), [board, size]);
+  const isDraw = !winner && board.every((c) => c !== null);
   const gameOver = !!winner || isDraw;
 
   // AI turn
   useEffect(() => {
-    if (turn === "O" && !gameOver) {
-      const t = setTimeout(() => {
-        const move = aiMove(board);
-        const next = [...board];
-        next[move] = "O";
-        setBoard(next);
-        setTurn("X");
-        SFX.move();
-      }, 400);
-      return () => clearTimeout(t);
-    }
-  }, [turn, board, gameOver]);
+    if (mode !== "ai" || !opponent) return;
+    if (turn !== "O" || gameOver) return;
+    const t = setTimeout(() => {
+      // Maybe roll chaos
+      const chaos = rollTTTChaos(board, size, opponent.id);
+      let curBoard = board;
+      let curSize = size;
+      if (chaos) {
+        SFX.chaos();
+        setChaosMsg(chaos);
+        setTimeout(() => setChaosMsg(null), 3500);
+        if (chaos.newBoard) {
+          curBoard = chaos.newBoard;
+          setBoard(chaos.newBoard);
+        }
+        if (chaos.newSize) {
+          curSize = chaos.newSize;
+          setSize(chaos.newSize);
+        }
+      }
+      const move = aiMove(curBoard, curSize, "O", opponent.skill);
+      const next = [...curBoard];
+      next[move] = "O";
+      setBoard(next);
+      setTurn("X");
+      SFX.move();
+    }, 450);
+    return () => clearTimeout(t);
+  }, [turn, board, size, gameOver, mode, opponent]);
 
-  // Score + crowns on game end (once per game)
+  // Score + crowns on game end
   useEffect(() => {
-    if (awarded) return;
+    if (awarded || mode !== "ai" || !opponent) return;
     if (winner === "X") {
-      setScore(s => ({ ...s, wins: s.wins + 1 }));
-      addCrowns(WIN_REWARD);
-      setLastReward(WIN_REWARD);
-      setAwarded(true);
+      addCrowns(opponent.crownReward);
+      const updated = addBeaten("tictactoe", opponent.id);
+      setBeatenIds(updated);
       SFX.win();
       SFX.crown();
-    } else if (winner === "O") {
-      setScore(s => ({ ...s, losses: s.losses + 1 }));
       setAwarded(true);
+    } else if (winner === "O") {
       SFX.lose();
+      setAwarded(true);
     } else if (isDraw) {
-      setScore(s => ({ ...s, draws: s.draws + 1 }));
-      if (DRAW_REWARD > 0) { addCrowns(DRAW_REWARD); setLastReward(DRAW_REWARD); }
       setAwarded(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [winner, isDraw]);
+  }, [winner, isDraw, awarded, mode, opponent]);
 
   const handleClick = (i: number) => {
-    if (board[i] || gameOver || turn !== "X") return;
+    if (board[i] || gameOver) return;
+    if (mode === "ai" && turn !== "X") return;
     const next = [...board];
-    next[i] = "X";
+    next[i] = turn;
     setBoard(next);
-    setTurn("O");
+    setTurn(turn === "X" ? "O" : "X");
     SFX.select();
   };
 
-  const reset = () => {
-    setBoard(Array(9).fill(null));
+  const reset = (newSize = 3) => {
+    setSize(newSize);
+    setBoard(Array(newSize * newSize).fill(null));
     setTurn("X");
     setAwarded(false);
-    setLastReward(null);
+    setChaosMsg(null);
   };
 
-  return (
-    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-6">
-      <div className="text-center">
-        <h1 className="text-3xl sm:text-5xl font-black text-foreground">Tic-Tac-Toe</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          You: <span className="font-bold text-accent">X</span> · AI: <span className="font-bold text-primary">O</span>
-        </p>
-        <div className="mt-3 inline-flex items-center gap-2 bg-accent/10 border border-accent/30 px-3 py-1 rounded-full">
-          <span className="text-sm font-bold text-accent">👑 {crowns} crowns</span>
+  if (mode === "menu") {
+    return (
+      <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-6">
+        <h1 className="text-4xl sm:text-6xl font-black text-foreground">⭕ Tic-Tac-Toe</h1>
+        <div className="flex flex-col gap-3 w-full max-w-xs">
+          <Button onClick={() => setMode("ai-pick")} className="h-14">🤖 Play vs AI</Button>
+          <Button
+            onClick={() => {
+              setOpponent(null);
+              reset(3);
+              setMode("local");
+            }}
+            variant="secondary"
+            className="h-14"
+          >
+            👥 Same Device (2P)
+          </Button>
+          <Link to="/"><Button variant="ghost" className="w-full">← Arcade</Button></Link>
+        </div>
+        <div className="inline-flex items-center gap-2 bg-accent/10 border border-accent/30 px-3 py-1 rounded-full">
+          <span className="text-sm font-bold text-accent">👑 {crowns}</span>
         </div>
       </div>
+    );
+  }
 
-      <div className="flex gap-4 text-xs sm:text-sm">
-        <span className="bg-accent/15 text-accent px-3 py-1 rounded-full font-bold">Wins: {score.wins}</span>
-        <span className="bg-destructive/15 text-destructive px-3 py-1 rounded-full font-bold">Losses: {score.losses}</span>
-        <span className="bg-muted text-muted-foreground px-3 py-1 rounded-full font-bold">Draws: {score.draws}</span>
+  if (mode === "ai-pick") {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-2 sm:p-4">
+        <GenericAIPicker
+          opponents={TTT_OPPONENTS}
+          beatenIds={beatenIds}
+          crowns={crowns}
+          title="⭕ PICK YOUR TTT RIVAL"
+          onSelect={(opp) => {
+            setOpponent(opp);
+            reset(3);
+            setMode("ai");
+          }}
+          onBack={() => setMode("menu")}
+        />
+      </div>
+    );
+  }
+
+  const lineSet = new Set(line ?? []);
+
+  return (
+    <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-4">
+      {opponent && mode === "ai" && (
+        <div className="flex items-center gap-3">
+          <div className="relative w-12 h-12 rounded-full overflow-hidden border-2 border-accent">
+            <img src={opponent.image} alt={opponent.name} className="w-full h-full object-cover" />
+            {opponent.id === "edward-tophat" && (
+              <div className="absolute -top-3 left-1/2 -translate-x-1/2">
+                <TopHat size={28} />
+              </div>
+            )}
+          </div>
+          <div>
+            <h1 className="text-lg sm:text-2xl font-black leading-tight">vs {opponent.name}</h1>
+            <p className="text-[11px] text-muted-foreground">ELO {opponent.elo} · {opponent.title}</p>
+          </div>
+        </div>
+      )}
+
+      <div className="flex gap-3 text-xs flex-wrap justify-center">
+        <span className="bg-accent/15 text-accent px-3 py-1 rounded-full font-bold">👑 {crowns}</span>
+        <span className="bg-secondary px-3 py-1 rounded-full font-bold">{size}x{size} (need {size <= 4 ? 3 : 4})</span>
       </div>
 
-      <div className="grid grid-cols-3 gap-2 bg-primary/20 p-2 rounded-2xl shadow-2xl">
-        {board.map((cell, i) => (
-          <button
-            key={i}
-            onClick={() => handleClick(i)}
-            disabled={!!cell || gameOver || turn !== "X"}
-            className={`w-20 h-20 sm:w-28 sm:h-28 rounded-xl text-5xl sm:text-7xl font-black flex items-center justify-center transition-all ${
-              line?.includes(i)
-                ? "bg-accent/30 ring-4 ring-accent scale-105"
-                : "bg-card hover:bg-accent/10"
-            } ${cell === "X" ? "text-accent" : cell === "O" ? "text-primary" : ""}`}
-          >
-            {cell}
-          </button>
-        ))}
+      {chaosMsg && (
+        <div className="animate-in fade-in zoom-in-95 duration-300 max-w-md bg-destructive/10 border-2 border-destructive rounded-xl p-3 text-center">
+          <p className="text-lg font-black text-destructive">
+            {chaosMsg.emoji} {chaosMsg.name} {chaosMsg.emoji}
+          </p>
+          <p className="text-xs text-foreground">{chaosMsg.message}</p>
+        </div>
+      )}
+
+      <div
+        className="grid gap-2 bg-primary/20 p-2 rounded-2xl shadow-2xl"
+        style={{ gridTemplateColumns: `repeat(${size}, minmax(0, 1fr))` }}
+      >
+        {board.map((cell, i) => {
+          const cellSize = size === 3 ? 96 : size === 4 ? 76 : 60;
+          return (
+            <button
+              key={i}
+              onClick={() => handleClick(i)}
+              disabled={!!cell || gameOver || (mode === "ai" && turn !== "X")}
+              style={{ width: cellSize, height: cellSize }}
+              className={`rounded-xl font-black flex items-center justify-center transition-all ${
+                lineSet.has(i)
+                  ? "bg-accent/30 ring-4 ring-accent scale-105"
+                  : "bg-card hover:bg-accent/10"
+              } ${cell === "X" ? "text-accent" : cell === "O" ? "text-primary" : ""}`}
+            >
+              <span style={{ fontSize: cellSize * 0.55 }}>{cell}</span>
+            </button>
+          );
+        })}
       </div>
 
       <div className="text-center min-h-[2rem] space-y-1">
         {winner === "X" && <p className="text-2xl font-black text-accent animate-rise-up">🏆 You win!</p>}
         {winner === "O" && <p className="text-2xl font-black text-destructive animate-rise-up">💀 AI wins!</p>}
         {isDraw && <p className="text-2xl font-black text-primary animate-rise-up">🤝 Draw!</p>}
-        {!gameOver && turn === "O" && <p className="text-sm text-muted-foreground animate-pulse">AI is thinking...</p>}
-        {lastReward !== null && lastReward > 0 && (
-          <p className="text-sm font-bold text-accent animate-rise-up">+{lastReward} 👑 (Total: {crowns})</p>
+        {opponent && winner === "X" && (
+          <p className="text-sm font-bold text-accent">+{opponent.crownReward} 👑 (Total: {crowns})</p>
         )}
       </div>
 
-      <div className="flex gap-2">
-        <Button onClick={reset} variant="default">New Game</Button>
-        <Link to="/"><Button variant="outline">← Arcade</Button></Link>
+      <div className="flex gap-2 flex-wrap justify-center">
+        <Button onClick={() => reset(3)}>New Game</Button>
+        <Button onClick={() => { setMode("menu"); reset(3); setOpponent(null); }} variant="outline">
+          ← Menu
+        </Button>
       </div>
+
+      <AiSongPlayer show={mode === "ai" && !gameOver} />
     </div>
   );
 };
