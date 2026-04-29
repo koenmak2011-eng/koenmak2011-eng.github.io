@@ -9,6 +9,7 @@ import TicTacToe from "./pages/TicTacToe.tsx";
 import Checkers from "./pages/Checkers.tsx";
 import Videos from "./pages/Videos.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import AmericaBanner from "./components/AmericaBanner";
 
 const queryClient = new QueryClient();
 
@@ -17,6 +18,7 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
+      <AmericaBanner />
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<GamesHub />} />
