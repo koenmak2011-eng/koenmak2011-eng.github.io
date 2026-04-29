@@ -433,6 +433,7 @@ const Index = () => {
         opponentName={aiEnabled && aiOpponent ? aiOpponent.name : undefined}
         onDismiss={() => setEndDismissed(true)}
       />
+      {jobOverlay}
     </div>
   );
 };
