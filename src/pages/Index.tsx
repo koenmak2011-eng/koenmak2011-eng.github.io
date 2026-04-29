@@ -12,7 +12,9 @@ import { PLAYER_CHAOS_OPTIONS, payMaterialCost } from "@/lib/playerChaos";
 import { SFX } from "@/lib/sfx";
 import ChaosOverlay from "@/components/ChaosOverlay";
 import GameEndOverlay from "@/components/GameEndOverlay";
+import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
+import { AI_OPPONENTS } from "@/data/aiOpponents";
 import bearBg from "@/assets/bear-background.jpg";
 
 function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture: boolean): string | null {
@@ -57,6 +59,18 @@ const Index = () => {
   const [gameEnded, setGameEnded] = useState(false);
   const [endDismissed, setEndDismissed] = useState(false);
   const [boardShake, setBoardShake] = useState(false);
+  const [jobPopupOpen, setJobPopupOpen] = useState(false);
+
+  // Auto-trigger job popup once when all non-secret AIs have been beaten
+  useEffect(() => {
+    const nonSecretIds = AI_OPPONENTS.filter(o => !o.locked).map(o => o.id);
+    const allBeaten = nonSecretIds.length > 0 && nonSecretIds.every(id => beatenIds.includes(id));
+    const alreadyShown = localStorage.getItem("chess-job-popup-shown") === "1";
+    if (allBeaten && !alreadyShown) {
+      localStorage.setItem("chess-job-popup-shown", "1");
+      setJobPopupOpen(true);
+    }
+  }, [beatenIds]);
 
   const aiEnabled = mode === "ai";
 
@@ -264,6 +278,19 @@ const Index = () => {
   const handleResign = () => setResigned(game.turn());
   const handleBackToMenu = () => { setMode("menu"); resetGame(); setAiOpponent(null); };
 
+  const jobOverlay = (
+    <>
+      <button
+        onClick={() => setJobPopupOpen(true)}
+        className="fixed top-3 right-3 z-50 bg-accent text-accent-foreground font-black text-xs sm:text-sm px-3 py-1.5 rounded-full border-2 border-border shadow-lg hover:scale-105 active:scale-95 transition-transform"
+        aria-label="Job"
+      >
+        JOB
+      </button>
+      <JobApplicationPopup open={jobPopupOpen} onClose={() => setJobPopupOpen(false)} />
+    </>
+  );
+
   if (mode === "menu") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -271,6 +298,7 @@ const Index = () => {
           <img src={bearBg} alt="" className="w-full h-full object-cover" />
         </div>
         <MainMenu onSelectMode={setMode} crowns={crowns} />
+        {jobOverlay}
       </div>
     );
   }
@@ -284,6 +312,7 @@ const Index = () => {
           onSelect={(opp) => { setAiOpponent(opp); resetGame(); setMode("ai"); }}
           onBack={() => setMode("menu")}
         />
+        {jobOverlay}
       </div>
     );
   }
@@ -404,6 +433,7 @@ const Index = () => {
         opponentName={aiEnabled && aiOpponent ? aiOpponent.name : undefined}
         onDismiss={() => setEndDismissed(true)}
       />
+      {jobOverlay}
     </div>
   );
 };
