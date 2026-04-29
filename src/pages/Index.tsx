@@ -123,7 +123,7 @@ const Index = () => {
       setGameAwarded(true);
       setGameEnded(true);
     }
-  }, [aiEnabled, aiOpponent, beatenIds, gameAwarded, getGameOutcome]);
+  }, [aiEnabled, aiOpponent, beatenIds, gameAwarded, getGameOutcome, tick]);
 
   const resetGame = () => {
     setGame(new Chess());
