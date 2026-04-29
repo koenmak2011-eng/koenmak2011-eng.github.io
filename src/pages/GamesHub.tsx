@@ -120,6 +120,41 @@ const GamesHub = () => {
           })}
         </div>
 
+        {/* Final boss tile (visible always; locked state if not unlocked) */}
+        <Link
+          to="/abhay"
+          className={`mt-6 block rounded-2xl border-2 p-6 transition-all relative overflow-hidden ${
+            abhayReady
+              ? "border-destructive bg-gradient-to-br from-destructive/30 to-accent/20 hover:scale-[1.01] animate-pulse"
+              : "border-border/40 bg-card cursor-pointer opacity-70 hover:opacity-100"
+          }`}
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full overflow-hidden border-2 border-destructive shrink-0">
+              {abhayReady ? (
+                <img src={abhayImg} alt="Abhay" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full bg-muted flex items-center justify-center text-3xl">🔒</div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <h2 className="text-xl sm:text-2xl font-black text-foreground">
+                {abhayReady ? "ABHAY — Final Boss" : "??? — Sealed"}
+              </h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">
+                {abhayReady
+                  ? "Three games. One timer. Twenty minutes. Win or vanish."
+                  : "Defeat every AI in Chess, Checkers, and Tic-Tac-Toe to unlock."}
+              </p>
+            </div>
+            <span className={`text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${
+              abhayReady ? "bg-destructive/30 text-destructive" : "bg-muted text-muted-foreground"
+            }`}>
+              {abhayReady ? "Fight!" : "Locked"}
+            </span>
+          </div>
+        </Link>
+
         {/* Featured video */}
         {featured && (
           <section className="mt-12">
