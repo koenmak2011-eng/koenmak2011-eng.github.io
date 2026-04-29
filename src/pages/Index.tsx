@@ -387,7 +387,7 @@ const Index = () => {
       </div>
 
       {/* Crown reward toast on game over */}
-      {aiEnabled && aiOpponent && gameAwarded && ((game.isCheckmate() && game.turn() === "b") || resigned === "b") && (
+      {aiEnabled && aiOpponent && gameAwarded && getGameOutcome() === "win" && (
         <div className="animate-in fade-in slide-in-from-bottom-4 duration-500 bg-accent/20 border border-accent rounded-xl px-4 py-2 text-center">
           <p className="text-sm font-bold text-accent">👑 +{aiOpponent.crownReward} Crowns! (Total: {crowns})</p>
         </div>
@@ -398,19 +398,10 @@ const Index = () => {
 
       {/* Game-end overlay */}
       <GameEndOverlay
-        outcome={
-          endDismissed || !gameEnded
-            ? null
-            : game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()
-            ? "draw"
-            : (game.isCheckmate() && game.turn() === "b") || resigned === "b"
-            ? "win"
-            : (game.isCheckmate() && game.turn() === "w") || resigned === "w"
-            ? "lose"
-            : null
-        }
+        outcome={endDismissed || !gameEnded ? null : getGameOutcome()}
         crownReward={aiEnabled && aiOpponent ? aiOpponent.crownReward : undefined}
         totalCrowns={crowns}
+        opponentName={aiEnabled && aiOpponent ? aiOpponent.name : undefined}
         onDismiss={() => setEndDismissed(true)}
       />
     </div>
