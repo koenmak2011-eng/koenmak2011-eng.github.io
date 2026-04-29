@@ -45,11 +45,24 @@ const GAMES: Game[] = [
 import { loadCrowns, subscribeCrowns } from "@/lib/crowns";
 import { VIDEOS } from "@/lib/videos";
 import VideoCard from "@/components/VideoCard";
+import { isAbhayUnlocked, subscribeBeaten, type GameKey } from "@/lib/beaten";
+import { CHECKERS_OPPONENTS } from "@/data/checkersOpponents";
+import { TTT_OPPONENTS } from "@/data/tttOpponents";
+import abhayImg from "@/assets/ai-abhay.png";
+
+const CHESS_REQUIRED = ["arthur", "austen", "william", "edward", "arthur-awakened", "capybara-god"];
+const ABHAY_REQ: Record<GameKey, string[]> = {
+  chess: CHESS_REQUIRED,
+  checkers: CHECKERS_OPPONENTS.map((o) => o.id),
+  tictactoe: TTT_OPPONENTS.map((o) => o.id),
+};
 
 const GamesHub = () => {
   const [crowns, setCrowns] = useState(loadCrowns);
   const [showSecretVideo, setShowSecretVideo] = useState(false);
+  const [abhayReady, setAbhayReady] = useState(() => isAbhayUnlocked(ABHAY_REQ));
   useEffect(() => subscribeCrowns(setCrowns), []);
+  useEffect(() => subscribeBeaten(() => setAbhayReady(isAbhayUnlocked(ABHAY_REQ))), []);
   const featured = VIDEOS[0];
 
   return (
