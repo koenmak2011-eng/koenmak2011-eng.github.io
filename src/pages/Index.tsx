@@ -59,6 +59,18 @@ const Index = () => {
   const [gameEnded, setGameEnded] = useState(false);
   const [endDismissed, setEndDismissed] = useState(false);
   const [boardShake, setBoardShake] = useState(false);
+  const [jobPopupOpen, setJobPopupOpen] = useState(false);
+
+  // Auto-trigger job popup once when all non-secret AIs have been beaten
+  useEffect(() => {
+    const nonSecretIds = AI_OPPONENTS.filter(o => !o.locked).map(o => o.id);
+    const allBeaten = nonSecretIds.length > 0 && nonSecretIds.every(id => beatenIds.includes(id));
+    const alreadyShown = localStorage.getItem("chess-job-popup-shown") === "1";
+    if (allBeaten && !alreadyShown) {
+      localStorage.setItem("chess-job-popup-shown", "1");
+      setJobPopupOpen(true);
+    }
+  }, [beatenIds]);
 
   const aiEnabled = mode === "ai";
 
