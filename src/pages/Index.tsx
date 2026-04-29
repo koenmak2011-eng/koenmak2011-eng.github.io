@@ -37,7 +37,7 @@ const Index = () => {
   const [mode, setMode] = useState<GameMode>("menu");
   const [game, setGame] = useState(new Chess());
   const [moveHistory, setMoveHistory] = useState<string[]>([]);
-  const [, setTick] = useState(0);
+  const [tick, setTick] = useState(0);
   const [aiOpponent, setAiOpponent] = useState<AIOpponent | null>(null);
   const [aiThinking, setAiThinking] = useState(false);
   const [resigned, setResigned] = useState<"w" | "b" | null>(null);
