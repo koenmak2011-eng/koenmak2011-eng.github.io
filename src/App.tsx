@@ -9,6 +9,7 @@ import TicTacToe from "./pages/TicTacToe.tsx";
 import Checkers from "./pages/Checkers.tsx";
 import Videos from "./pages/Videos.tsx";
 import NotFound from "./pages/NotFound.tsx";
+import Abhay from "./pages/Abhay.tsx";
 import AmericaBanner from "./components/AmericaBanner";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/tictactoe" element={<TicTacToe />} />
           <Route path="/checkers" element={<Checkers />} />
           <Route path="/videos" element={<Videos />} />
+          <Route path="/abhay" element={<Abhay />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
