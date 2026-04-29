@@ -85,8 +85,8 @@ const Index = () => {
       }
     }
 
-    const aiAnnihilated = !blackKing || (blackMaterial === 0 && whiteMaterial >= 3);
-    const playerAnnihilated = !whiteKing || (whiteMaterial === 0 && blackMaterial >= 3);
+    const aiAnnihilated = !blackKing;
+    const playerAnnihilated = !whiteKing;
 
     if (playerWonByMate || aiResigned || aiAnnihilated) return "win";
     if (aiWonByMate || playerResigned || playerAnnihilated) return "lose";
