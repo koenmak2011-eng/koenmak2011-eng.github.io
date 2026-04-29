@@ -60,17 +60,13 @@ const Index = () => {
 
   const aiEnabled = mode === "ai";
 
-  // Track wins — award crowns exactly once per game
-  useEffect(() => {
-    if (!aiEnabled || !aiOpponent || gameAwarded) return;
-
+  const getGameOutcome = useCallback((): "win" | "lose" | "draw" | null => {
     const checkmate = game.isCheckmate();
     const playerWonByMate = checkmate && game.turn() === "b";
     const aiWonByMate = checkmate && game.turn() === "w";
     const playerResigned = resigned === "w";
     const aiResigned = resigned === "b";
 
-    // Count remaining material (excluding kings) — chaos can wipe a side out
     let whiteMaterial = 0;
     let blackMaterial = 0;
     let whiteKing = false;
@@ -89,14 +85,22 @@ const Index = () => {
       }
     }
 
-    // Chaos win: AI has only king and < 3 material, OR no king at all
     const aiAnnihilated = !blackKing || (blackMaterial === 0 && whiteMaterial >= 3);
     const playerAnnihilated = !whiteKing || (whiteMaterial === 0 && blackMaterial >= 3);
 
-    const playerWon = playerWonByMate || aiResigned || aiAnnihilated;
-    const playerLost = aiWonByMate || playerResigned || playerAnnihilated;
+    if (playerWonByMate || aiResigned || aiAnnihilated) return "win";
+    if (aiWonByMate || playerResigned || playerAnnihilated) return "lose";
+    if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()) return "draw";
+    return null;
+  }, [game, resigned]);
 
-    if (playerWon) {
+  // Track wins — award crowns exactly once per game
+  useEffect(() => {
+    if (!aiEnabled || !aiOpponent || gameAwarded) return;
+
+    const outcome = getGameOutcome();
+
+    if (outcome === "win") {
       setGameAwarded(true);
       setGameEnded(true);
       if (!beatenIds.includes(aiOpponent.id)) {
@@ -111,15 +115,15 @@ const Index = () => {
       });
       SFX.crown();
       SFX.win();
-    } else if (playerLost) {
+    } else if (outcome === "lose") {
       setGameAwarded(true);
       setGameEnded(true);
       SFX.lose();
-    } else if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()) {
+    } else if (outcome === "draw") {
       setGameAwarded(true);
       setGameEnded(true);
     }
-  }, [game, resigned, aiEnabled, aiOpponent, beatenIds, gameAwarded]);
+  }, [aiEnabled, aiOpponent, beatenIds, gameAwarded, getGameOutcome]);
 
   const resetGame = () => {
     setGame(new Chess());
