@@ -13,6 +13,7 @@ import { SFX } from "@/lib/sfx";
 import ChaosOverlay from "@/components/ChaosOverlay";
 import GameEndOverlay from "@/components/GameEndOverlay";
 import JobApplicationPopup from "@/components/JobApplicationPopup";
+import AiSongPlayer from "@/components/AiSongPlayer";
 import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
 import { AI_OPPONENTS } from "@/data/aiOpponents";
 import bearBg from "@/assets/bear-background.jpg";
@@ -434,6 +435,7 @@ const Index = () => {
         onDismiss={() => setEndDismissed(true)}
       />
       {jobOverlay}
+      <AiSongPlayer show={aiEnabled && !gameEnded} />
     </div>
   );
 };
