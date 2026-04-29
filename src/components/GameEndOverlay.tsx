@@ -6,10 +6,11 @@ interface Props {
   outcome: Outcome;
   crownReward?: number;
   totalCrowns?: number;
+  opponentName?: string;
   onDismiss?: () => void;
 }
 
-const GameEndOverlay = ({ outcome, crownReward, totalCrowns, onDismiss }: Props) => {
+const GameEndOverlay = ({ outcome, crownReward, totalCrowns, opponentName, onDismiss }: Props) => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -44,6 +45,11 @@ const GameEndOverlay = ({ outcome, crownReward, totalCrowns, onDismiss }: Props)
           <div className="bg-card border-4 border-accent rounded-2xl p-8 sm:p-12 text-center shadow-2xl animate-win-burst max-w-md mx-4">
             <div className="text-7xl sm:text-8xl mb-3">👑</div>
             <h2 className="text-4xl sm:text-5xl font-black text-accent mb-2">VICTORY!</h2>
+            {opponentName && (
+              <p className="text-base sm:text-lg font-black text-foreground mb-2">
+                You beat {opponentName}
+              </p>
+            )}
             {crownReward !== undefined && (
               <p className="text-lg sm:text-xl font-bold text-foreground">
                 +{crownReward} Crowns
