@@ -278,6 +278,19 @@ const Index = () => {
   const handleResign = () => setResigned(game.turn());
   const handleBackToMenu = () => { setMode("menu"); resetGame(); setAiOpponent(null); };
 
+  const jobOverlay = (
+    <>
+      <button
+        onClick={() => setJobPopupOpen(true)}
+        className="fixed top-3 right-3 z-50 bg-accent text-accent-foreground font-black text-xs sm:text-sm px-3 py-1.5 rounded-full border-2 border-border shadow-lg hover:scale-105 active:scale-95 transition-transform"
+        aria-label="Job"
+      >
+        JOB
+      </button>
+      <JobApplicationPopup open={jobPopupOpen} onClose={() => setJobPopupOpen(false)} />
+    </>
+  );
+
   if (mode === "menu") {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center p-4 relative overflow-hidden">
@@ -285,6 +298,7 @@ const Index = () => {
           <img src={bearBg} alt="" className="w-full h-full object-cover" />
         </div>
         <MainMenu onSelectMode={setMode} crowns={crowns} />
+        {jobOverlay}
       </div>
     );
   }
@@ -298,6 +312,7 @@ const Index = () => {
           onSelect={(opp) => { setAiOpponent(opp); resetGame(); setMode("ai"); }}
           onBack={() => setMode("menu")}
         />
+        {jobOverlay}
       </div>
     );
   }
