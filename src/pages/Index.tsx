@@ -12,7 +12,9 @@ import { PLAYER_CHAOS_OPTIONS, payMaterialCost } from "@/lib/playerChaos";
 import { SFX } from "@/lib/sfx";
 import ChaosOverlay from "@/components/ChaosOverlay";
 import GameEndOverlay from "@/components/GameEndOverlay";
+import JobApplicationPopup from "@/components/JobApplicationPopup";
 import { loadCrowns, saveCrowns, subscribeCrowns } from "@/lib/crowns";
+import { AI_OPPONENTS } from "@/data/aiOpponents";
 import bearBg from "@/assets/bear-background.jpg";
 
 function pickRemark(opponent: AIOpponent | null, game: Chess, lastMoveWasCapture: boolean): string | null {
