@@ -10,6 +10,7 @@ import Checkers from "./pages/Checkers.tsx";
 import Videos from "./pages/Videos.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Abhay from "./pages/Abhay.tsx";
+import Plague from "./pages/Plague.tsx";
 import AmericaBanner from "./components/AmericaBanner";
 
 const queryClient = new QueryClient();
@@ -28,6 +29,7 @@ const App = () => (
           <Route path="/checkers" element={<Checkers />} />
           <Route path="/videos" element={<Videos />} />
           <Route path="/abhay" element={<Abhay />} />
+          <Route path="/plague" element={<Plague />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

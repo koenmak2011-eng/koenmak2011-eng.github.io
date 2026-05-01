@@ -40,6 +40,15 @@ const GAMES: Game[] = [
     available: true,
     accent: "from-destructive/30 to-accent/10",
   },
+  {
+    id: "plague",
+    title: "Capybara Inc.",
+    emoji: "☣️",
+    tagline: "Evolve a plague. End humanity. 7 strains, 25 countries, achievements.",
+    path: "/plague",
+    available: true,
+    accent: "from-destructive/40 to-primary/10",
+  },
 ];
 
 import { loadCrowns, subscribeCrowns } from "@/lib/crowns";
