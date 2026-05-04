@@ -252,47 +252,47 @@ const Plague = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {/* LEFT: countries */}
-          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-3">
-            <h3 className="font-black mb-2 text-sm">🌍 Countries</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-[60vh] overflow-y-auto pr-1">
-              {state.countries.map((c) => {
-                const infRatio = c.infected / Math.max(1, c.population);
-                const deadRatio = c.dead / Math.max(1, c.population);
-                const heat = Math.min(1, infRatio + deadRatio);
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => setSelectedCountry(c.id === selectedCountry ? null : c.id)}
-                    className={`text-left p-2 rounded-lg border-2 transition-all ${
-                      selectedCountry === c.id ? "border-accent" : "border-border hover:border-accent/50"
-                    }`}
-                    style={{ background: `linear-gradient(90deg, hsl(var(--destructive) / ${heat * 0.4}) 0%, hsl(var(--card)) 100%)` }}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-lg">{c.emoji}</span>
-                      <span className="text-[9px] text-muted-foreground">
-                        {c.airportOpen ? "✈️" : "🚫"}{c.seaportOpen ? "🚢" : "🚫"}{c.bordersOpen ? "🚧" : "🚫"}
-                      </span>
-                    </div>
-                    <div className="text-[11px] font-bold truncate">{c.name}</div>
-                    <div className="text-[9px] text-muted-foreground">{c.climate}·{c.wealth}</div>
-                    <div className="mt-1 h-1.5 w-full rounded bg-muted overflow-hidden flex">
-                      <div className="bg-accent" style={{ width: `${infRatio * 100}%` }} />
-                      <div className="bg-destructive" style={{ width: `${deadRatio * 100}%` }} />
-                    </div>
-                    {selectedCountry === c.id && (
-                      <div className="text-[10px] mt-1 text-foreground space-y-0.5">
-                        <div>Pop: {fmt(c.population)}</div>
-                        <div>Infected: {fmt(c.infected)}</div>
-                        <div>Dead: {fmt(c.dead)}</div>
-                        <div>Awareness: {Math.floor(c.awareness * 100)}%</div>
-                      </div>
-                    )}
-                  </button>
-                );
-              })}
+          {/* LEFT: world map + selected info */}
+          <div className="lg:col-span-2 bg-card border border-border rounded-xl p-3 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="font-black text-sm">🌍 World Map</h3>
+              <div className="text-[10px] text-muted-foreground">scroll to zoom · drag to pan · click a country</div>
             </div>
+            <div className="h-[52vh] min-h-[360px]">
+              <WorldMap
+                countries={state.countries}
+                selectedId={selectedCountry}
+                onSelect={(id) => setSelectedCountry(id === selectedCountry ? null : id)}
+              />
+            </div>
+            {(() => {
+              const c = selectedCountry ? state.countries.find((x) => x.id === selectedCountry) : null;
+              if (!c) {
+                return <div className="text-[11px] text-muted-foreground italic text-center py-2">Click a country to inspect.</div>;
+              }
+              const infRatio = c.infected / Math.max(1, c.population);
+              const deadRatio = c.dead / Math.max(1, c.population);
+              return (
+                <div className="border border-border rounded-lg p-3 bg-background/40">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="font-black text-sm">{c.emoji} {c.name}</div>
+                    <div className="text-[10px] text-muted-foreground">
+                      {c.airportOpen ? "✈️" : "🚫✈️"} {c.seaportOpen ? "🚢" : "🚫🚢"} {c.bordersOpen ? "🚧" : "🚫🚧"}
+                    </div>
+                  </div>
+                  <div className="text-[10px] text-muted-foreground mb-2">{c.climate} · {c.wealth} · pop {fmt(c.population)}</div>
+                  <div className="grid grid-cols-3 gap-2 text-[10px]">
+                    <div><span className="text-muted-foreground">Infected</span><div className="font-bold">{fmt(c.infected)} ({(infRatio*100).toFixed(1)}%)</div></div>
+                    <div><span className="text-muted-foreground">Dead</span><div className="font-bold text-destructive">{fmt(c.dead)} ({(deadRatio*100).toFixed(1)}%)</div></div>
+                    <div><span className="text-muted-foreground">Awareness</span><div className="font-bold">{Math.floor(c.awareness*100)}%</div></div>
+                  </div>
+                  <div className="mt-2 h-1.5 w-full rounded bg-muted overflow-hidden flex">
+                    <div className="bg-accent" style={{ width: `${infRatio * 100}%` }} />
+                    <div className="bg-destructive" style={{ width: `${deadRatio * 100}%` }} />
+                  </div>
+                </div>
+              );
+            })()}
           </div>
 
           {/* RIGHT: evolution + news */}
