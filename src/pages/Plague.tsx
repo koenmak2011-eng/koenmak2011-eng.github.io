@@ -23,6 +23,7 @@ import {
 } from "@/lib/plague/engine";
 import { addCrowns } from "@/lib/crowns";
 import type { DiseaseType, EvolutionCategory } from "@/lib/plague/types";
+import { WorldMap } from "@/components/plague/WorldMap";
 import { toast } from "sonner";
 
 type Phase = "menu" | "pickType" | "pickStart" | "play";
