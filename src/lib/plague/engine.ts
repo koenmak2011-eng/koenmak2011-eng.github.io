@@ -310,7 +310,14 @@ export function saveGame(state: PlagueState) {
 export function loadGame(): PlagueState | null {
   try {
     const raw = localStorage.getItem(SAVE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as PlagueState;
+    // Schema check: country list size must match current COUNTRIES (catches old 25-country saves)
+    if (!parsed.countries || parsed.countries.length !== COUNTRIES.length) {
+      localStorage.removeItem(SAVE_KEY);
+      return null;
+    }
+    return parsed;
   } catch { return null; }
 }
 export function clearSave() { try { localStorage.removeItem(SAVE_KEY); } catch {} }
