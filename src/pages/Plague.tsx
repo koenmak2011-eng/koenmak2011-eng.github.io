@@ -178,20 +178,27 @@ const Plague = () => {
           <h2 className="text-2xl sm:text-3xl font-black">Patient Zero?</h2>
           <div className="w-12" />
         </div>
-        <p className="text-center text-sm text-muted-foreground mb-4">Pick where {state.diseaseName} begins.</p>
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
-          {state.countries.map((c) => (
-            <button
-              key={c.id}
-              onClick={() => pickStartCountry(c.id)}
-              className="p-3 rounded-xl border-2 border-border bg-card hover:border-accent hover:scale-105 transition-all"
-            >
-              <div className="text-2xl">{c.emoji}</div>
-              <div className="text-xs font-bold mt-1">{c.name}</div>
-              <div className="text-[10px] text-muted-foreground">{c.climate} · {c.wealth}</div>
-            </button>
-          ))}
+        <p className="text-center text-sm text-muted-foreground mb-4">Click a country on the map — that's where {state.diseaseName} begins.</p>
+        <div className="bg-card border border-border rounded-xl p-2 mb-3">
+          <WorldMap
+            countries={state.countries}
+            selectedId={selectedCountry}
+            onSelect={(id) => setSelectedCountry(id)}
+          />
         </div>
+        {selectedCountry && (() => {
+          const c = state.countries.find((x) => x.id === selectedCountry);
+          if (!c) return null;
+          return (
+            <div className="flex items-center justify-between gap-3 bg-card border border-border rounded-xl p-3">
+              <div>
+                <div className="font-black text-lg">{c.emoji} {c.name}</div>
+                <div className="text-xs text-muted-foreground">Pop {fmt(c.population)} · {c.climate} · {c.wealth}</div>
+              </div>
+              <Button onClick={() => pickStartCountry(c.id)}>Start here →</Button>
+            </div>
+          );
+        })()}
       </Shell>
     );
   }
