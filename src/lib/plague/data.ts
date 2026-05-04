@@ -139,42 +139,11 @@ export const EVOLUTIONS: Evolution[] = [
   { id: "environ", name: "Environmental Hardening", category: "ability", cost: 8, description: "Resists all climates.", hot: 0.2, cold: 0.2, humid: 0.2, arid: 0.2 },
 ];
 
-// 25-country world. Borders kept simple by region.
-export const COUNTRIES: Country[] = makeCountries([
-  // Americas
-  ["usa", "United States", "🇺🇸", 331_000_000, "humid", "rich", true, true, ["can", "mex"]],
-  ["can", "Canada", "🇨🇦", 38_000_000, "cold", "rich", true, true, ["usa"]],
-  ["mex", "Mexico", "🇲🇽", 128_000_000, "hot", "poor", true, true, ["usa", "bra"]],
-  ["bra", "Brazil", "🇧🇷", 213_000_000, "humid", "poor", true, true, ["mex", "arg"]],
-  ["arg", "Argentina", "🇦🇷", 45_000_000, "arid", "poor", true, true, ["bra"]],
-  // Europe
-  ["uk", "United Kingdom", "🇬🇧", 67_000_000, "humid", "rich", true, true, ["fra", "ger"]],
-  ["fra", "France", "🇫🇷", 67_000_000, "humid", "rich", true, true, ["uk", "ger", "spa", "ita"]],
-  ["ger", "Germany", "🇩🇪", 83_000_000, "cold", "rich", true, true, ["fra", "uk", "pol", "ita"]],
-  ["spa", "Spain", "🇪🇸", 47_000_000, "hot", "rich", true, true, ["fra"]],
-  ["ita", "Italy", "🇮🇹", 60_000_000, "hot", "rich", true, true, ["fra", "ger"]],
-  ["pol", "Poland", "🇵🇱", 38_000_000, "cold", "rich", true, true, ["ger", "rus"]],
-  ["rus", "Russia", "🇷🇺", 144_000_000, "cold", "poor", true, true, ["pol", "chn", "kaz"]],
-  // Africa
-  ["egy", "Egypt", "🇪🇬", 104_000_000, "arid", "poor", true, true, ["sau", "nig"]],
-  ["nig", "Nigeria", "🇳🇬", 211_000_000, "hot", "poor", true, true, ["egy", "saf"]],
-  ["saf", "South Africa", "🇿🇦", 60_000_000, "arid", "poor", true, true, ["nig"]],
-  // Middle East / Asia
-  ["sau", "Saudi Arabia", "🇸🇦", 35_000_000, "arid", "rich", true, true, ["egy", "ind"]],
-  ["ind", "India", "🇮🇳", 1_400_000_000, "hot", "poor", true, true, ["sau", "chn"]],
-  ["chn", "China", "🇨🇳", 1_410_000_000, "humid", "rich", true, true, ["rus", "ind", "jpn", "kaz"]],
-  ["jpn", "Japan", "🇯🇵", 125_000_000, "humid", "rich", true, true, ["chn"]],
-  ["kor", "South Korea", "🇰🇷", 51_000_000, "humid", "rich", true, true, ["chn"]],
-  ["kaz", "Kazakhstan", "🇰🇿", 19_000_000, "arid", "poor", true, false, ["rus", "chn"]],
-  // Oceania
-  ["aus", "Australia", "🇦🇺", 26_000_000, "arid", "rich", true, true, []],
-  ["nzl", "New Zealand", "🇳🇿", 5_000_000, "humid", "rich", true, true, []],
-  // Polar / isolated
-  ["grn", "Greenland", "🇬🇱", 56_000, "cold", "rich", true, true, []],
-  ["ice", "Iceland", "🇮🇸", 376_000, "cold", "rich", true, true, []],
-]);
+// Full 175-country world (auto-generated from world-atlas).
+export { COUNTRIES } from "./countries.generated";
 
-function makeCountries(rows: any[]): Country[] {
+// Legacy unused (kept for type compat if referenced elsewhere)
+function _unusedMake(rows: any[]): Country[] {
   return rows.map(([id, name, emoji, pop, climate, wealth, air, sea, borders]) => ({
     id, name, emoji, population: pop, climate, wealth,
     hasAirport: air, hasSeaport: sea, borders,
