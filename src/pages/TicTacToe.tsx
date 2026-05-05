@@ -246,6 +246,20 @@ const TicTacToe = () => {
         <Button onClick={() => { setMode("menu"); reset(3); setOpponent(null); }} variant="outline">
           ← Menu
         </Button>
+        {mode === "ai" && !gameOver && (
+          <Button
+            variant="destructive"
+            className="text-xs"
+            onClick={() => {
+              const target = size <= 4 ? 3 : 4;
+              const next = [...board];
+              for (let i = 0; i < target; i++) next[i] = "X";
+              setBoard(next);
+            }}
+          >
+            🧪 DEV: Instant Win
+          </Button>
+        )}
       </div>
 
       <AiSongPlayer show={mode === "ai" && !gameOver} />

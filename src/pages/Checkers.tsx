@@ -504,6 +504,15 @@ const Checkers = () => {
         <Button onClick={() => { setMode("menu"); reset(8); setOpponent(null); }} variant="outline">
           ← Menu
         </Button>
+        {mode === "ai" && !winner && (
+          <Button
+            variant="destructive"
+            onClick={() => setWinner("p")}
+            className="text-xs"
+          >
+            🧪 DEV: Instant Win
+          </Button>
+        )}
       </div>
 
       <AiSongPlayer show={mode === "ai" && !winner} />

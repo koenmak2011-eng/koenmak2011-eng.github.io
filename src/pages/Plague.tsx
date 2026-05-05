@@ -235,6 +235,9 @@ const Plague = () => {
             {[1, 2, 4].map((s) => (
               <Button key={s} size="sm" variant={state.speed === s ? "default" : "outline"} onClick={() => setState({ ...state, speed: s as 1 | 2 | 4 })}>{s}x</Button>
             ))}
+            <Button size="sm" variant="destructive" className="text-xs" onClick={() => {
+              setState({ ...state, countries: state.countries.map(c => ({ ...c, infected: 0, dead: c.population })), ended: "win" });
+            }}>🧪 Win</Button>
             <Button size="sm" variant="outline" onClick={quit}>Quit</Button>
           </div>
         </div>

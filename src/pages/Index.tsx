@@ -388,6 +388,15 @@ const Index = () => {
         </div>
       )}
 
+      {aiEnabled && !gameEnded && (
+        <button
+          onClick={() => setResigned("b")}
+          className="text-[10px] px-2 py-1 rounded bg-destructive/20 border border-destructive text-destructive font-bold hover:bg-destructive/30"
+        >
+          🧪 DEV: Instant Win
+        </button>
+      )}
+
       <div className="flex flex-col lg:flex-row items-center lg:items-start gap-3 sm:gap-6 w-full max-w-[min(100vw-1rem,1100px)]">
         <div className={`relative ${boardShake ? "animate-shake" : ""}`}>
           <ChessBoard game={game} onMove={handleMove} />
