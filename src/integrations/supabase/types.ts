@@ -14,7 +14,30 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      abhay_notes: {
+        Row: {
+          created_at: string
+          id: string
+          message: string
+          nickname: string
+          pixel_art: Json | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          message: string
+          nickname: string
+          pixel_art?: Json | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          message?: string
+          nickname?: string
+          pixel_art?: Json | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
