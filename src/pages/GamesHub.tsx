@@ -49,6 +49,24 @@ const GAMES: Game[] = [
     available: true,
     accent: "from-destructive/40 to-primary/10",
   },
+  {
+    id: "capydash",
+    title: "Capy Dash",
+    emoji: "🟧",
+    tagline: "One-button cube jumper. 5 levels, coin shop, neon spikes.",
+    path: "/capydash",
+    available: true,
+    accent: "from-fuchsia-600/30 to-cyan-500/20",
+  },
+  {
+    id: "trashcapy",
+    title: "Trash-Capy AI",
+    emoji: "🦫",
+    tagline: "Chat a chaotic capybara that roasts you in real time.",
+    path: "/trashcapy",
+    available: true,
+    accent: "from-amber-500/30 to-rose-600/10",
+  },
 ];
 
 import { loadCrowns, subscribeCrowns } from "@/lib/crowns";

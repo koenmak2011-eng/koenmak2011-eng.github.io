@@ -25,6 +25,7 @@ import { addCrowns } from "@/lib/crowns";
 import type { DiseaseType, EvolutionCategory } from "@/lib/plague/types";
 import { WorldMap } from "@/components/plague/WorldMap";
 import { toast } from "sonner";
+import AdBreak from "@/components/AdBreak";
 
 type Phase = "menu" | "pickType" | "pickStart" | "play";
 
@@ -35,6 +36,7 @@ const Plague = () => {
   const [state, setState] = useState<PlagueState | null>(null);
   const [tab, setTab] = useState<EvolutionCategory>("transmission");
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
   const tickRef = useRef<number | null>(null);
   const wonTypes = loadWonTypes();
   const allAch = loadAchievements();
@@ -55,6 +57,7 @@ const Plague = () => {
   // End handling
   useEffect(() => {
     if (!state || !state.ended) return;
+    setAdOpen(true);
     mergeAchievements(state.achievements);
     if (state.ended === "win") {
       markTypeWon(state.typeId);
@@ -390,6 +393,7 @@ const Plague = () => {
             </div>
           </div>
         )}
+        <AdBreak open={adOpen} onClose={() => setAdOpen(false)} />
       </Shell>
     );
   }
