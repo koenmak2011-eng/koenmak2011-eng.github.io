@@ -1,1 +1,4 @@
 project_id = "gcswcuiyolflphlbmyql"
+
+[functions.trash-capy]
+verify_jwt = false
