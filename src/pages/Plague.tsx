@@ -36,6 +36,7 @@ const Plague = () => {
   const [state, setState] = useState<PlagueState | null>(null);
   const [tab, setTab] = useState<EvolutionCategory>("transmission");
   const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
+  const [adOpen, setAdOpen] = useState(false);
   const tickRef = useRef<number | null>(null);
   const wonTypes = loadWonTypes();
   const allAch = loadAchievements();
@@ -56,6 +57,7 @@ const Plague = () => {
   // End handling
   useEffect(() => {
     if (!state || !state.ended) return;
+    setAdOpen(true);
     mergeAchievements(state.achievements);
     if (state.ended === "win") {
       markTypeWon(state.typeId);
@@ -391,6 +393,7 @@ const Plague = () => {
             </div>
           </div>
         )}
+        <AdBreak open={adOpen} onClose={() => setAdOpen(false)} />
       </Shell>
     );
   }
