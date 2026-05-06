@@ -510,7 +510,7 @@ const Checkers = () => {
             onClick={() => setWinner("p")}
             className="text-xs"
           >
-            🧪 DEV: Instant Win
+            ⚡ Instant Win
           </Button>
         )}
       </div>

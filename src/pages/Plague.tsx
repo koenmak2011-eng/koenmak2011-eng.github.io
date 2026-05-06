@@ -237,7 +237,7 @@ const Plague = () => {
             ))}
             <Button size="sm" variant="destructive" className="text-xs" onClick={() => {
               setState({ ...state, countries: state.countries.map(c => ({ ...c, infected: 0, dead: c.population })), ended: "win" });
-            }}>🧪 Win</Button>
+            }}>⚡ Instant Win</Button>
             <Button size="sm" variant="outline" onClick={quit}>Quit</Button>
           </div>
         </div>

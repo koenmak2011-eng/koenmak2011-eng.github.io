@@ -399,6 +399,18 @@ const Abhay = () => {
             </div>
             <div className="text-[10px] text-muted-foreground">Score {wins}-{losses}</div>
           </div>
+          <Button
+            size="sm"
+            variant="destructive"
+            className="text-xs"
+            onClick={() => {
+              setChessWon("p");
+              setCWon("p");
+              setTWon("X");
+            }}
+          >
+            ⚡ Instant Win
+          </Button>
         </div>
 
         {/* Per-game status pills */}

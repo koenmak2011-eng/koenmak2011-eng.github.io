@@ -393,7 +393,7 @@ const Index = () => {
           onClick={() => setResigned("b")}
           className="text-[10px] px-2 py-1 rounded bg-destructive/20 border border-destructive text-destructive font-bold hover:bg-destructive/30"
         >
-          🧪 DEV: Instant Win
+          ⚡ Instant Win
         </button>
       )}
 

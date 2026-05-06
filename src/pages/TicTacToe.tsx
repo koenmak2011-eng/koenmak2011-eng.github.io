@@ -257,7 +257,7 @@ const TicTacToe = () => {
               setBoard(next);
             }}
           >
-            🧪 DEV: Instant Win
+            ⚡ Instant Win
           </Button>
         )}
       </div>
