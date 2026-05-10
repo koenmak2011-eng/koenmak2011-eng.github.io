@@ -25,9 +25,22 @@ const LEVELS: Level[] = [
   { id: "base-after-base", name: "Base Capy", speed: 9.5, gap: [120, 200], bg: "from-purple-600 to-pink-700", reward: 240 },
 ];
 
+const DEATH_QUIPS = [
+  "Skill issue.",
+  "Spike said hello.",
+  "Capy go splat.",
+  "So close. Not really.",
+  "Did you mean to jump?",
+  "The spike won this round.",
+  "Touch grass — gently this time.",
+  "Even Arthur saw that coming.",
+  "Abhay is laughing at you.",
+];
+
 const LS_SKIN = "capydash:skin";
 const LS_OWNED = "capydash:owned";
 const LS_BEST = "capydash:best";
+const LS_ATTEMPTS = "capydash:attempts";
 
 function loadOwned(): string[] {
   try { return JSON.parse(localStorage.getItem(LS_OWNED) || '["default"]'); } catch { return ["default"]; }
@@ -38,6 +51,14 @@ function loadBest(levelId: string): number { return Number(localStorage.getItem(
 function saveBest(levelId: string, pct: number) {
   if (pct > loadBest(levelId)) localStorage.setItem(`${LS_BEST}:${levelId}`, String(pct));
 }
+function loadAttempts(levelId: string, mode: "normal" | "practice"): number {
+  return Number(localStorage.getItem(`${LS_ATTEMPTS}:${mode}:${levelId}`) || 0);
+}
+function bumpAttempts(levelId: string, mode: "normal" | "practice"): number {
+  const n = loadAttempts(levelId, mode) + 1;
+  localStorage.setItem(`${LS_ATTEMPTS}:${mode}:${levelId}`, String(n));
+  return n;
+}
 
 // ====== Game ======
 const W = 800, H = 360;
@@ -46,6 +67,7 @@ const CUBE = 32;
 const GRAVITY = 0.9;
 const JUMP_V = -14;
 const RUN_FRAMES = 60 * 30; // 30 seconds = "completion"
+const CHECKPOINT_EVERY = 60 * 5; // every 5s of progress
 
 interface Obstacle { x: number; w: number; h: number; type: "spike" | "block"; }
 interface Coin { x: number; y: number; taken: boolean; }
@@ -57,8 +79,11 @@ const CapyDash = () => {
   const [owned, setOwned] = useState<string[]>(loadOwned);
   const [skin, setSkin] = useState<string>(loadSelectedSkin);
   const [level, setLevel] = useState<Level>(LEVELS[0]);
+  const [mode, setMode] = useState<"normal" | "practice">("normal");
   const [adOpen, setAdOpen] = useState(false);
-  const [endStats, setEndStats] = useState<{ pct: number; coins: number; reward: number; completed: boolean } | null>(null);
+  const [endStats, setEndStats] = useState<{ pct: number; coins: number; reward: number; completed: boolean; quip: string; attempts: number; deathX?: number } | null>(null);
+  // Live HUD state
+  const [hud, setHud] = useState({ attempts: 0, checkpoint: 0 });
 
   useEffect(() => subscribeCrowns(setCrowns), []);
   useEffect(() => { localStorage.setItem(LS_SKIN, skin); }, [skin]);
@@ -71,10 +96,13 @@ const CapyDash = () => {
     onGround: true,
     rotation: 0,
     frame: 0,
+    startFrame: 0, // for practice respawn
     obstacles: [] as Obstacle[],
     coins: [] as Coin[],
     coinsCollected: 0,
     dead: false,
+    lastCheckpoint: 0, // frame index of last checkpoint reached
+    flashFrames: 0,
   });
 
   const skinColor = SKINS.find((s) => s.id === skin)?.color ?? "#f59e0b";
@@ -106,28 +134,57 @@ const CapyDash = () => {
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    const startAttempt = bumpAttempts(level.id, mode);
+    setHud({ attempts: startAttempt, checkpoint: 0 });
+
     // Reset
     stateRef.current = {
       y: GROUND_Y - CUBE, vy: 0, onGround: true, rotation: 0,
-      frame: 0, obstacles: [], coins: [], coinsCollected: 0, dead: false,
+      frame: 0, startFrame: 0, obstacles: [], coins: [], coinsCollected: 0,
+      dead: false, lastCheckpoint: 0, flashFrames: 0,
     };
 
     const speed = level.speed;
     let nextSpawn = 60;
 
     const finish = (completed: boolean) => {
-      cancelAnimationFrame(rafRef.current!);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
       const s = stateRef.current;
       const pct = Math.min(100, Math.floor((s.frame / RUN_FRAMES) * 100));
+      const attempts = loadAttempts(level.id, mode);
+      const quip = DEATH_QUIPS[Math.floor(Math.random() * DEATH_QUIPS.length)];
+
+      if (mode === "practice") {
+        // Practice: don't save best, no rewards, no ad. Just show a brief end & let them retry from checkpoint.
+        setEndStats({ pct, coins: s.coinsCollected, reward: 0, completed, quip, attempts, deathX: 100 });
+        setPhase("end");
+        return;
+      }
+
       saveBest(level.id, pct);
       const coinReward = s.coinsCollected * 5;
       const completionReward = completed ? level.reward : Math.floor(level.reward * (pct / 100) * 0.3);
       const total = coinReward + completionReward;
       if (total > 0) addCrowns(total);
-      setEndStats({ pct, coins: s.coinsCollected, reward: total, completed });
+      setEndStats({ pct, coins: s.coinsCollected, reward: total, completed, quip, attempts });
       if (completed) SFX.win(); else SFX.lose();
       setAdOpen(true);
       setPhase("end");
+    };
+
+    const respawnFromCheckpoint = () => {
+      const s = stateRef.current;
+      // restart attempt from last checkpoint frame
+      const cp = s.lastCheckpoint;
+      const attempts = bumpAttempts(level.id, mode);
+      setHud({ attempts, checkpoint: Math.floor((cp / RUN_FRAMES) * 100) });
+      stateRef.current = {
+        y: GROUND_Y - CUBE, vy: 0, onGround: true, rotation: 0,
+        frame: cp, startFrame: cp, obstacles: [], coins: [], coinsCollected: s.coinsCollected,
+        dead: false, lastCheckpoint: cp, flashFrames: 18,
+      };
+      nextSpawn = 30;
+      rafRef.current = requestAnimationFrame(tick);
     };
 
     const tick = () => {
@@ -146,6 +203,13 @@ const CapyDash = () => {
         s.rotation += 0.18;
       }
 
+      // checkpoint tracking (practice mode only banks them)
+      if (mode === "practice" && s.frame - s.lastCheckpoint >= CHECKPOINT_EVERY) {
+        s.lastCheckpoint = s.frame;
+        setHud((h) => ({ ...h, checkpoint: Math.floor((s.frame / RUN_FRAMES) * 100) }));
+        s.flashFrames = 12;
+      }
+
       // spawn obstacles
       nextSpawn--;
       if (nextSpawn <= 0) {
@@ -153,7 +217,6 @@ const CapyDash = () => {
         const w = isSpike ? 26 : 36;
         const h = isSpike ? 28 : 32 + Math.floor(Math.random() * 24);
         s.obstacles.push({ x: W + 20, w, h, type: isSpike ? "spike" : "block" });
-        // sometimes a coin floating above
         if (Math.random() < 0.55) {
           s.coins.push({ x: W + 20 + w / 2, y: GROUND_Y - CUBE - 50 - Math.random() * 40, taken: false });
         }
@@ -169,10 +232,12 @@ const CapyDash = () => {
 
       // collisions
       const px = 100, py = s.y, pw = CUBE, ph = CUBE;
+      let killer: Obstacle | null = null;
       for (const o of s.obstacles) {
         const oy = GROUND_Y - o.h;
         if (px < o.x + o.w && px + pw > o.x && py < oy + o.h && py + ph > oy) {
           s.dead = true;
+          killer = o;
           break;
         }
       }
@@ -188,7 +253,6 @@ const CapyDash = () => {
 
       // ===== draw =====
       ctx.clearRect(0, 0, W, H);
-      // background grid
       ctx.fillStyle = "#0b1024";
       ctx.fillRect(0, 0, W, H);
       ctx.strokeStyle = "rgba(255,255,255,0.07)";
@@ -196,6 +260,13 @@ const CapyDash = () => {
       const off = (s.frame * speed) % 40;
       for (let x = -off; x < W; x += 40) { ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
       for (let y = 0; y < H; y += 40) { ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+
+      // checkpoint flash
+      if (s.flashFrames > 0) {
+        ctx.fillStyle = `rgba(34,197,94,${0.18 * (s.flashFrames / 18)})`;
+        ctx.fillRect(0, 0, W, H);
+        s.flashFrames--;
+      }
 
       // ground
       ctx.fillStyle = "#1f2937";
@@ -239,10 +310,20 @@ const CapyDash = () => {
       ctx.strokeStyle = "rgba(0,0,0,0.4)";
       ctx.lineWidth = 2;
       ctx.strokeRect(-pw / 2, -ph / 2, pw, ph);
-      // eye
       ctx.fillStyle = "#0b1024";
       ctx.fillRect(-4, -8, 6, 6);
       ctx.restore();
+
+      // death burst
+      if (s.dead && killer) {
+        ctx.fillStyle = "rgba(239,68,68,0.35)";
+        ctx.beginPath();
+        ctx.arc(px + pw / 2, py + ph / 2, 40, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.strokeStyle = "#ef4444";
+        ctx.lineWidth = 3;
+        ctx.strokeRect(killer.x - 2, GROUND_Y - killer.h - 2, killer.w + 4, killer.h + 4);
+      }
 
       // progress bar
       const pct = Math.min(1, s.frame / RUN_FRAMES);
@@ -250,18 +331,31 @@ const CapyDash = () => {
       ctx.fillRect(20, 16, W - 40, 8);
       ctx.fillStyle = skinColor;
       ctx.fillRect(20, 16, (W - 40) * pct, 8);
+      // checkpoint marker on bar
+      if (mode === "practice" && s.lastCheckpoint > 0) {
+        const cpx = 20 + (W - 40) * (s.lastCheckpoint / RUN_FRAMES);
+        ctx.fillStyle = "#22c55e";
+        ctx.fillRect(cpx - 2, 12, 4, 16);
+      }
       ctx.fillStyle = "#fff";
       ctx.font = "bold 12px monospace";
-      ctx.fillText(`${Math.floor(pct * 100)}%   🪙 ${s.coinsCollected}`, 20, 40);
+      ctx.fillText(`${Math.floor(pct * 100)}%   🪙 ${s.coinsCollected}   ATT ${loadAttempts(level.id, mode)}${mode === "practice" ? "  PRACTICE" : ""}`, 20, 40);
 
-      if (s.dead) return finish(false);
+      if (s.dead) {
+        if (mode === "practice") {
+          // brief pause then auto-respawn from checkpoint
+          setTimeout(respawnFromCheckpoint, 450);
+          return;
+        }
+        return finish(false);
+      }
       if (s.frame >= RUN_FRAMES) return finish(true);
       rafRef.current = requestAnimationFrame(tick);
     };
 
     rafRef.current = requestAnimationFrame(tick);
     return () => { if (rafRef.current) cancelAnimationFrame(rafRef.current); };
-  }, [phase, level, skinColor]);
+  }, [phase, level, skinColor, mode]);
 
   // ====== Renders ======
   if (phase === "menu") {
@@ -332,22 +426,33 @@ const CapyDash = () => {
       <div className="min-h-screen bg-background p-4">
         <div className="max-w-2xl mx-auto space-y-3">
           <h1 className="text-3xl font-black text-center">Pick a Level</h1>
+          <p className="text-center text-xs text-muted-foreground">
+            Choose <span className="text-accent font-bold">Normal</span> for crowns &amp; best %, or <span className="text-emerald-500 font-bold">Practice</span> for green checkpoints &amp; instant respawn.
+          </p>
           {LEVELS.map((l) => {
             const best = loadBest(l.id);
+            const att = loadAttempts(l.id, "normal");
             return (
-              <button key={l.id} onClick={() => { setLevel(l); setPhase("play"); }}
-                className={`w-full p-4 rounded-xl border-2 border-border bg-gradient-to-r ${l.bg} text-left text-white hover:scale-[1.01] transition`}>
-                <div className="flex items-center justify-between">
+              <div key={l.id} className={`rounded-xl border-2 border-border bg-gradient-to-r ${l.bg} text-white p-4`}>
+                <div className="flex items-center justify-between mb-3">
                   <div>
                     <div className="font-black text-lg">{l.name}</div>
-                    <div className="text-xs opacity-80">Speed {l.speed} · Reward {l.reward} 👑</div>
+                    <div className="text-xs opacity-80">Speed {l.speed} · Reward {l.reward} 👑 · {att} attempts</div>
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-black">{best}%</div>
                     <div className="text-[10px] opacity-80">best</div>
                   </div>
                 </div>
-              </button>
+                <div className="grid grid-cols-2 gap-2">
+                  <Button size="sm" onClick={() => { setLevel(l); setMode("normal"); setPhase("play"); }}>
+                    ▶ Normal
+                  </Button>
+                  <Button size="sm" variant="secondary" onClick={() => { setLevel(l); setMode("practice"); setPhase("play"); }}>
+                    🟢 Practice
+                  </Button>
+                </div>
+              </div>
             );
           })}
           <Button onClick={() => setPhase("menu")} variant="outline" className="w-full">← Back</Button>
@@ -359,7 +464,18 @@ const CapyDash = () => {
   if (phase === "play") {
     return (
       <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-3">
-        <div className="text-xs text-muted-foreground">{level.name} · tap or SPACE to jump</div>
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-muted-foreground">{level.name} · tap or SPACE to jump</span>
+          <span className={`px-2 py-0.5 rounded-full font-bold ${mode === "practice" ? "bg-emerald-500/15 text-emerald-500 border border-emerald-500/40" : "bg-accent/15 text-accent border border-accent/40"}`}>
+            {mode === "practice" ? "🟢 PRACTICE" : "⚡ NORMAL"}
+          </span>
+          <span className="bg-card border border-border px-2 py-0.5 rounded-full font-mono">ATT {hud.attempts}</span>
+          {mode === "practice" && (
+            <span className="bg-emerald-500/15 text-emerald-500 border border-emerald-500/40 px-2 py-0.5 rounded-full font-mono">
+              CP {hud.checkpoint}%
+            </span>
+          )}
+        </div>
         <canvas
           ref={canvasRef}
           width={W}
@@ -368,19 +484,47 @@ const CapyDash = () => {
           className="max-w-full rounded-xl border-2 border-accent shadow-2xl touch-none"
           style={{ aspectRatio: `${W}/${H}` }}
         />
-        <Button variant="outline" size="sm" onClick={() => { setPhase("level-pick"); }}>Quit</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" size="sm" onClick={() => { setPhase("level-pick"); }}>Quit</Button>
+          {mode === "practice" && (
+            <Button variant="secondary" size="sm" onClick={() => {
+              // reset run from start
+              if (rafRef.current) cancelAnimationFrame(rafRef.current);
+              setPhase("level-pick");
+              setTimeout(() => setPhase("play"), 30);
+            }}>Restart</Button>
+          )}
+        </div>
       </div>
     );
   }
 
   // end
+  const completed = endStats?.completed;
   return (
     <div className="min-h-screen bg-background flex flex-col items-center justify-center p-4 gap-4">
-      <div className="text-6xl">{endStats?.completed ? "🏆" : "💀"}</div>
-      <h1 className="text-3xl font-black">{endStats?.completed ? "Cleared!" : "Splat."}</h1>
-      <p className="text-sm text-muted-foreground">
-        {endStats?.pct}% · 🪙 {endStats?.coins} · +{endStats?.reward} 👑
-      </p>
+      <div className="text-6xl">{completed ? "🏆" : "💀"}</div>
+      <h1 className="text-3xl font-black">{completed ? "Cleared!" : "Splat."}</h1>
+      {!completed && (
+        <p className="text-sm italic text-muted-foreground max-w-xs text-center">"{endStats?.quip}"</p>
+      )}
+      <div className="grid grid-cols-3 gap-3 text-center">
+        <div className="bg-card border border-border rounded-lg px-4 py-2">
+          <div className="text-2xl font-black">{endStats?.pct}%</div>
+          <div className="text-[10px] uppercase text-muted-foreground">progress</div>
+        </div>
+        <div className="bg-card border border-border rounded-lg px-4 py-2">
+          <div className="text-2xl font-black">🪙 {endStats?.coins}</div>
+          <div className="text-[10px] uppercase text-muted-foreground">coins</div>
+        </div>
+        <div className="bg-card border border-border rounded-lg px-4 py-2">
+          <div className="text-2xl font-black">{endStats?.attempts}</div>
+          <div className="text-[10px] uppercase text-muted-foreground">attempts</div>
+        </div>
+      </div>
+      {mode === "normal" && endStats?.reward ? (
+        <p className="text-sm text-accent font-bold">+{endStats.reward} 👑 earned</p>
+      ) : null}
       <div className="flex gap-2">
         <Button onClick={() => setPhase("play")}>Retry</Button>
         <Button variant="secondary" onClick={() => setPhase("level-pick")}>Levels</Button>
