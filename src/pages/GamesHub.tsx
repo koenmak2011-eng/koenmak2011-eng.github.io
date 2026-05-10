@@ -89,8 +89,14 @@ const GamesHub = () => {
   const [crowns, setCrowns] = useState(loadCrowns);
   const [showSecretVideo, setShowSecretVideo] = useState(false);
   const [abhayReady, setAbhayReady] = useState(() => isAbhayUnlocked(ABHAY_REQ));
+  const [community, setCommunity] = useState<any[]>([]);
   useEffect(() => subscribeCrowns(setCrowns), []);
   useEffect(() => subscribeBeaten(() => setAbhayReady(isAbhayUnlocked(ABHAY_REQ))), []);
+  useEffect(() => {
+    supabase.from("community_creations").select("id,title,description,author_name,content,plays,likes")
+      .eq("type", "game").order("created_at", { ascending: false }).limit(12)
+      .then(({ data }) => { if (data) setCommunity(data); });
+  }, []);
   const featured = VIDEOS[0];
 
   return (
@@ -182,6 +188,35 @@ const GamesHub = () => {
             </span>
           </div>
         </Link>
+
+        {/* Community arcade */}
+        <section className="mt-10">
+          <div className="flex items-end justify-between mb-4">
+            <div>
+              <h2 className="text-2xl sm:text-3xl font-black text-foreground">🌍 Community Arcade</h2>
+              <p className="text-xs sm:text-sm text-muted-foreground">Games + ads built by everyone, with or without AI.</p>
+            </div>
+            <Link to="/create" className="text-xs sm:text-sm font-bold bg-accent text-accent-foreground px-3 py-2 rounded-lg hover:opacity-90">
+              + Build one
+            </Link>
+          </div>
+          {community.length === 0 ? (
+            <div className="rounded-2xl border-2 border-dashed border-border p-8 text-center text-sm text-muted-foreground">
+              Nothing yet. <Link to="/create" className="text-accent font-bold hover:underline">Be the first →</Link>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+              {community.map((c) => (
+                <Link key={c.id} to={`/play/${c.id}`} className="rounded-xl border-2 border-border hover:border-accent bg-card p-4 transition hover:scale-[1.02]">
+                  <div className="text-3xl mb-1">{c.content?.theme?.emoji || "🎮"}</div>
+                  <h3 className="font-black text-sm leading-tight">{c.title}</h3>
+                  <p className="text-[10px] text-muted-foreground">by {c.author_name}</p>
+                  <p className="text-[10px] text-muted-foreground mt-2">▶️ {c.plays ?? 0} · ❤️ {c.likes ?? 0}</p>
+                </Link>
+              ))}
+            </div>
+          )}
+        </section>
 
         {/* Featured video */}
         {featured && (
