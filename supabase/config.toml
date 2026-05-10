@@ -2,3 +2,6 @@ project_id = "gcswcuiyolflphlbmyql"
 
 [functions.trash-capy]
 verify_jwt = false
+
+[functions.generate-creation]
+verify_jwt = false
