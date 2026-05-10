@@ -38,6 +38,45 @@ export type Database = {
         }
         Relationships: []
       }
+      community_creations: {
+        Row: {
+          author_name: string
+          content: Json
+          created_at: string
+          description: string | null
+          id: string
+          likes: number
+          plays: number
+          thumbnail_url: string | null
+          title: string
+          type: string
+        }
+        Insert: {
+          author_name?: string
+          content: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number
+          plays?: number
+          thumbnail_url?: string | null
+          title: string
+          type: string
+        }
+        Update: {
+          author_name?: string
+          content?: Json
+          created_at?: string
+          description?: string | null
+          id?: string
+          likes?: number
+          plays?: number
+          thumbnail_url?: string | null
+          title?: string
+          type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
