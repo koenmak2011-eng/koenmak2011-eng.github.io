@@ -20,14 +20,6 @@ interface Props {
 
 const AdBreak = ({ open, onClose, durationMs = 4000 }: Props) => {
   const [ad] = useState(() => ADS[Math.floor(Math.random() * ADS.length)]);
-  const [canSkip, setCanSkip] = useState(false);
-
-  useEffect(() => {
-    if (!open) return;
-    setCanSkip(false);
-    const t = setTimeout(() => setCanSkip(true), durationMs);
-    return () => clearTimeout(t);
-  }, [open, durationMs]);
 
   if (!open) return null;
   return (
@@ -45,13 +37,7 @@ const AdBreak = ({ open, onClose, durationMs = 4000 }: Props) => {
         />
         <p className="text-center text-xs text-muted-foreground italic">{ad.tag}</p>
         <div className="flex justify-center">
-          <Button
-            onClick={onClose}
-            disabled={!canSkip}
-            variant={canSkip ? "default" : "secondary"}
-          >
-            {canSkip ? "Skip ad ✕" : `Skip in ${Math.ceil(durationMs / 1000)}s...`}
-          </Button>
+          <Button onClick={onClose} variant="default">Skip ad ✕</Button>
         </div>
       </div>
     </div>
