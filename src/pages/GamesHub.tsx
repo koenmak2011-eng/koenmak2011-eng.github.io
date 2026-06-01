@@ -68,6 +68,15 @@ const GAMES: Game[] = [
     available: true,
     accent: "from-amber-500/30 to-rose-600/10",
   },
+  {
+    id: "capycraft",
+    title: "Infinite Capy Craft",
+    emoji: "🧪",
+    tagline: "Drag two elements together. AI invents whatever happens next. Forever.",
+    path: "/capycraft",
+    available: true,
+    accent: "from-emerald-500/30 to-sky-500/20",
+  },
 ];
 
 import { loadCrowns, subscribeCrowns } from "@/lib/crowns";

@@ -15,6 +15,7 @@ import CapyDash from "./pages/CapyDash.tsx";
 import TrashCapy from "./pages/TrashCapy.tsx";
 import Create from "./pages/Create.tsx";
 import Play from "./pages/Play.tsx";
+import CapyCraft from "./pages/CapyCraft.tsx";
 import AmericaBanner from "./components/AmericaBanner";
 
 const queryClient = new QueryClient();
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/trashcapy" element={<TrashCapy />} />
           <Route path="/create" element={<Create />} />
           <Route path="/play/:id" element={<Play />} />
+          <Route path="/capycraft" element={<CapyCraft />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
