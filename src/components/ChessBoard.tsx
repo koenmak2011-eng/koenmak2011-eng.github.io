@@ -6,12 +6,15 @@ import { SFX } from "@/lib/sfx";
 interface ChessBoardProps {
   game: Chess;
   onMove: (from: Square, to: Square) => boolean;
+  flipped?: boolean;
 }
 
-const FILES = ["a", "b", "c", "d", "e", "f", "g", "h"];
-const RANKS = ["8", "7", "6", "5", "4", "3", "2", "1"];
+const FILES_BASE = ["a", "b", "c", "d", "e", "f", "g", "h"];
+const RANKS_BASE = ["8", "7", "6", "5", "4", "3", "2", "1"];
 
-const ChessBoard = ({ game, onMove }: ChessBoardProps) => {
+const ChessBoard = ({ game, onMove, flipped = false }: ChessBoardProps) => {
+  const FILES = flipped ? [...FILES_BASE].reverse() : FILES_BASE;
+  const RANKS = flipped ? [...RANKS_BASE].reverse() : RANKS_BASE;
   const [selected, setSelected] = useState<Square | null>(null);
   const [legalMoves, setLegalMoves] = useState<Square[]>([]);
 
