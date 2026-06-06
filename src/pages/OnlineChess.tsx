@@ -236,11 +236,14 @@ export default function OnlineChess() {
           <div>
             <h1 className="text-4xl font-black mb-2">🌐 Online Chess</h1>
             <p className="text-muted-foreground">
-              Create a private match and share the link with a friend to play together in real time.
+              Get matched with a random player, or create a private match and share the link with a friend.
             </p>
           </div>
-          <Button onClick={createGame} className="w-full h-16 text-lg font-bold">
-            Create New Game →
+          <Button onClick={quickMatch} className="w-full h-16 text-lg font-bold">
+            ⚡ Quick Match (Random Opponent)
+          </Button>
+          <Button onClick={createGame} variant="secondary" className="w-full h-14 text-base font-bold">
+            🔗 Create Private Game
           </Button>
           <Link to="/chess">
             <Button variant="ghost" className="w-full">← Back to Chess Menu</Button>
