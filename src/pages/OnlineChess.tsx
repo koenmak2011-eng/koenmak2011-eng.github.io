@@ -46,6 +46,44 @@ export default function OnlineChess() {
     navigate(`/online/${data.id}`);
   };
 
+  // Quick match: join an existing waiting game, else create one
+  const quickMatch = async () => {
+    // Find waiting games created in last 10 min, not by me
+    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+    const { data: waitingGames } = await supabase
+      .from("online_chess_games")
+      .select("*")
+      .eq("status", "waiting")
+      .is("black_id", null)
+      .neq("white_id", pid)
+      .gt("created_at", tenMinAgo)
+      .order("created_at", { ascending: true })
+      .limit(5);
+
+    if (waitingGames && waitingGames.length > 0) {
+      // Try to claim one (race-safe via conditional update)
+      for (const g of waitingGames) {
+        const { data: claimed } = await supabase
+          .from("online_chess_games")
+          .update({ black_id: pid, status: "active" })
+          .eq("id", g.id)
+          .is("black_id", null)
+          .select()
+          .single();
+        if (claimed) {
+          toast.success("Opponent found!");
+          navigate(`/online/${claimed.id}`);
+          return;
+        }
+      }
+    }
+
+    // No one waiting — create and wait
+    toast.message("No one waiting. Created a new game — sit tight!");
+    await createGame();
+  };
+
+
   // Load + subscribe
   useEffect(() => {
     if (!id) return;
@@ -198,11 +236,14 @@ export default function OnlineChess() {
           <div>
             <h1 className="text-4xl font-black mb-2">🌐 Online Chess</h1>
             <p className="text-muted-foreground">
-              Create a private match and share the link with a friend to play together in real time.
+              Get matched with a random player, or create a private match and share the link with a friend.
             </p>
           </div>
-          <Button onClick={createGame} className="w-full h-16 text-lg font-bold">
-            Create New Game →
+          <Button onClick={quickMatch} className="w-full h-16 text-lg font-bold">
+            ⚡ Quick Match (Random Opponent)
+          </Button>
+          <Button onClick={createGame} variant="secondary" className="w-full h-14 text-base font-bold">
+            🔗 Create Private Game
           </Button>
           <Link to="/chess">
             <Button variant="ghost" className="w-full">← Back to Chess Menu</Button>
