@@ -91,29 +91,17 @@ export default function OnlineChess() {
           return;
         }
         const r = data as Row;
-        // Auto-join as black if slot open and we're not white
-        if (!r.black_id && r.white_id && r.white_id !== pid) {
-          const { data: upd } = await supabase
-            .from("online_chess_games")
-            .update({ black_id: pid, status: "active" })
-            .eq("id", id)
-            .select()
-            .single();
-          if (upd) {
-            apply(upd as Row);
-            return;
-          }
-        }
-        // Auto-claim white if both slots open (rare)
-        if (!r.white_id) {
-          const { data: upd } = await supabase
-            .from("online_chess_games")
-            .update({ white_id: pid })
-            .eq("id", id)
-            .select()
-            .single();
-          if (upd) {
-            apply(upd as Row);
+        // Auto-join (claims black, or white if both seats are open) via RPC
+        if (
+          (!r.black_id && r.white_id && r.white_id !== pid) ||
+          (!r.white_id && r.black_id !== pid)
+        ) {
+          const { data: upd, error: jerr } = await supabase.rpc("join_online_chess_game", {
+            _game_id: id,
+            _player_id: pid,
+          });
+          if (!jerr && upd) {
+            apply(upd as unknown as Row);
             return;
           }
         }
