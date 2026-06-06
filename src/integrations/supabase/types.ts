@@ -118,7 +118,73 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      join_online_chess_game: {
+        Args: { _game_id: string; _player_id: string }
+        Returns: {
+          black_id: string | null
+          created_at: string
+          fen: string
+          id: string
+          moves: Json
+          status: string
+          updated_at: string
+          white_id: string | null
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "online_chess_games"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      quick_match_online_chess: {
+        Args: { _player_id: string }
+        Returns: {
+          black_id: string | null
+          created_at: string
+          fen: string
+          id: string
+          moves: Json
+          status: string
+          updated_at: string
+          white_id: string | null
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "online_chess_games"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_online_chess_move: {
+        Args: {
+          _fen: string
+          _game_id: string
+          _moves: Json
+          _player_id: string
+          _status: string
+          _winner: string
+        }
+        Returns: {
+          black_id: string | null
+          created_at: string
+          fen: string
+          id: string
+          moves: Json
+          status: string
+          updated_at: string
+          white_id: string | null
+          winner: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "online_chess_games"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
     }
     Enums: {
       [_ in never]: never
