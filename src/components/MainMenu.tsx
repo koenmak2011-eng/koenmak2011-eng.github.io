@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import bearBg from "@/assets/bear-background.jpg";
 
 export type GameMode = "menu" | "ai-pick" | "ai" | "local" | "online";
@@ -10,6 +10,7 @@ interface MainMenuProps {
 }
 
 const MainMenu = ({ onSelectMode, crowns }: MainMenuProps) => {
+  const navigate = useNavigate();
   return (
     <div className="relative flex flex-col items-center gap-6 w-full max-w-md px-4">
       {/* Background bear */}
@@ -50,13 +51,12 @@ const MainMenu = ({ onSelectMode, crowns }: MainMenuProps) => {
         </Button>
 
         <Button
-          onClick={() => onSelectMode("online")}
-          className="h-16 sm:h-20 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-transform opacity-60 cursor-not-allowed"
+          onClick={() => navigate("/online")}
+          className="h-16 sm:h-20 text-base sm:text-lg font-bold rounded-xl shadow-lg hover:scale-[1.02] transition-transform"
           variant="outline"
-          disabled
         >
           <span className="text-xl sm:text-2xl mr-3">🌐</span>
-          Online (Coming Soon)
+          Online (Invite a Friend)
         </Button>
       </div>
 

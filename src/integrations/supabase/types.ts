@@ -77,6 +77,42 @@ export type Database = {
         }
         Relationships: []
       }
+      online_chess_games: {
+        Row: {
+          black_id: string | null
+          created_at: string
+          fen: string
+          id: string
+          moves: Json
+          status: string
+          updated_at: string
+          white_id: string | null
+          winner: string | null
+        }
+        Insert: {
+          black_id?: string | null
+          created_at?: string
+          fen?: string
+          id?: string
+          moves?: Json
+          status?: string
+          updated_at?: string
+          white_id?: string | null
+          winner?: string | null
+        }
+        Update: {
+          black_id?: string | null
+          created_at?: string
+          fen?: string
+          id?: string
+          moves?: Json
+          status?: string
+          updated_at?: string
+          white_id?: string | null
+          winner?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
