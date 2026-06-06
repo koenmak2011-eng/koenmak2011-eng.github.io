@@ -172,9 +172,14 @@ export default function OnlineChess() {
       setRow({ ...row, fen: newFen, moves: newMoves, status, winner });
 
       supabase
-        .from("online_chess_games")
-        .update({ fen: newFen, moves: newMoves, status, winner, updated_at: new Date().toISOString() })
-        .eq("id", row.id)
+        .rpc("submit_online_chess_move", {
+          _game_id: row.id,
+          _player_id: pid,
+          _fen: newFen,
+          _moves: newMoves,
+          _status: status,
+          _winner: winner,
+        })
         .then(({ error }) => {
           if (error) toast.error("Sync failed: " + error.message);
         });
