@@ -46,39 +46,17 @@ export default function OnlineChess() {
     navigate(`/online/${data.id}`);
   };
 
-  // Quick match: join an existing waiting game, else create one
+  // Quick match: atomically claim an open waiting game via RPC, else create one
   const quickMatch = async () => {
-    // Find waiting games created in last 10 min, not by me
-    const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-    const { data: waitingGames } = await supabase
-      .from("online_chess_games")
-      .select("*")
-      .eq("status", "waiting")
-      .is("black_id", null)
-      .neq("white_id", pid)
-      .gt("created_at", tenMinAgo)
-      .order("created_at", { ascending: true })
-      .limit(5);
-
-    if (waitingGames && waitingGames.length > 0) {
-      // Try to claim one (race-safe via conditional update)
-      for (const g of waitingGames) {
-        const { data: claimed } = await supabase
-          .from("online_chess_games")
-          .update({ black_id: pid, status: "active" })
-          .eq("id", g.id)
-          .is("black_id", null)
-          .select()
-          .single();
-        if (claimed) {
-          toast.success("Opponent found!");
-          navigate(`/online/${claimed.id}`);
-          return;
-        }
-      }
+    const { data: claimed, error } = await supabase.rpc("quick_match_online_chess", {
+      _player_id: pid,
+    });
+    if (error) return toast.error(error.message);
+    if (claimed && (claimed as any).id) {
+      toast.success("Opponent found!");
+      navigate(`/online/${(claimed as any).id}`);
+      return;
     }
-
-    // No one waiting — create and wait
     toast.message("No one waiting. Created a new game — sit tight!");
     await createGame();
   };
@@ -113,29 +91,17 @@ export default function OnlineChess() {
           return;
         }
         const r = data as Row;
-        // Auto-join as black if slot open and we're not white
-        if (!r.black_id && r.white_id && r.white_id !== pid) {
-          const { data: upd } = await supabase
-            .from("online_chess_games")
-            .update({ black_id: pid, status: "active" })
-            .eq("id", id)
-            .select()
-            .single();
-          if (upd) {
-            apply(upd as Row);
-            return;
-          }
-        }
-        // Auto-claim white if both slots open (rare)
-        if (!r.white_id) {
-          const { data: upd } = await supabase
-            .from("online_chess_games")
-            .update({ white_id: pid })
-            .eq("id", id)
-            .select()
-            .single();
-          if (upd) {
-            apply(upd as Row);
+        // Auto-join (claims black, or white if both seats are open) via RPC
+        if (
+          (!r.black_id && r.white_id && r.white_id !== pid) ||
+          (!r.white_id && r.black_id !== pid)
+        ) {
+          const { data: upd, error: jerr } = await supabase.rpc("join_online_chess_game", {
+            _game_id: id,
+            _player_id: pid,
+          });
+          if (!jerr && upd) {
+            apply(upd as unknown as Row);
             return;
           }
         }
@@ -206,9 +172,14 @@ export default function OnlineChess() {
       setRow({ ...row, fen: newFen, moves: newMoves, status, winner });
 
       supabase
-        .from("online_chess_games")
-        .update({ fen: newFen, moves: newMoves, status, winner, updated_at: new Date().toISOString() })
-        .eq("id", row.id)
+        .rpc("submit_online_chess_move", {
+          _game_id: row.id,
+          _player_id: pid,
+          _fen: newFen,
+          _moves: newMoves,
+          _status: status,
+          _winner: winner,
+        })
         .then(({ error }) => {
           if (error) toast.error("Sync failed: " + error.message);
         });
